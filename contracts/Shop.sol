@@ -76,9 +76,9 @@ contract Shop is Killable {
     {
         Product trustedProduct = Product(_product);
 
-        bytes32 productName = trustedProduct.name;
-        bytes32 productSku = trustedProduct.sku;
-        bytes32 productCategory = trustedProduct.category;
+        bytes32 productName = trustedProduct.name();
+        bytes32 productSku = trustedProduct.sku();
+        bytes32 productCategory = trustedProduct.category();
 
         require(trustedProduct.destroy());
 
@@ -100,9 +100,22 @@ contract Shop is Killable {
         returns(bool success)
     {
         // validate order
-        Order untrustedOrder = Product(_order);
+        Order untrustedOrder = Order(_order);
 
         // Only 10 unique items - no unnounded looping
-        require(untrustedOrder.productIndex.length < 10);
+        require(untrustedOrder.killed() != true);
+        require(untrustedOrder.paused() != true);
+
+        uint productCount = untrustedOrder.getProductCount();
+
+        require(productCount > 0);
+        require(productCount < 10);
+        require(untrustedOrder.payment());
+
+        orderIndex.push(untrustedOrder);
+        ordersStruct[untrustedOrder].order = untrustedOrder;
+        ordersStruct[untrustedOrder].index = orderIndex.length;
+
+        return true;
     }
 }
