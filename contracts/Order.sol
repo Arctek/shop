@@ -21,7 +21,15 @@ contract Order is Killable {
 
     address public shop;
 
-    uint total;
+    bool public locked;
+    //bool public paid;
+    uint public total;
+    //uint public balance;
+
+    modifier isNotLocked() {
+        require(locked != true);
+        _;
+    }
 
     function getProductCount()
         public
@@ -31,8 +39,25 @@ contract Order is Killable {
         return productIndex.length;
     }
 
+    function getProductAtIndex(uint8 _index) 
+        public
+        constant
+        returns(address product)
+    {
+        return productsStruct[productIndex[_index]].product;
+    }
+
+    function getProductQuantityAtIndex(uint8 _index) 
+        public
+        constant
+        returns(uint quantity)
+    {
+        return productsStruct[productIndex[_index]].quantity;
+    }
+
     function addProduct(address _product, uint _quantity)
         isOwner
+        isNotLocked
         public
         returns(bool success)
     {
@@ -78,26 +103,82 @@ contract Order is Killable {
 
     function removeProduct(address _product, uint _quantity)
         isOwner
+        isNotLocked
         public
         returns(bool success)
     {
-        
+        require(productsStruct[_product].product != address(0));
+
+        if (_quantity >= productsStruct[_product].quantity) {
+            uint rowToDelete = productsStruct[_product].index;
+            address keyToMove = productIndex[productIndex.length-1]; 
+
+            productIndex[rowToDelete] = keyToMove; 
+            productsStruct[keyToMove].index = rowToDelete;
+            productIndex.length = productIndex.length - 1;
+        }
+        else {
+            require(productsStruct[_product].quantity - _quantity > 0);
+            productsStruct[_product].quantity -= _quantity;
+        }
+
+        //LogRemoveProduct(msg.sender, _product, productName, productSku, productCategory);
 
         return true;
     }
 
-    function payment()
+    function lock() 
         public
         returns(bool success)
     {
         require(msg.sender == shop);
 
-        uint balance = this.balance;
-
-        msg.sender.transfer(balance);
-
-        //LogPayment(msg.sender, balance);
+        locked = true;
 
         return true;
     }
+
+    /*function pay()
+        public
+        isOwner
+        isNotLocked
+        payable
+        returns(bool success)
+    {
+        require(msg.value > 0);
+        require(msg.value == total);
+
+        balance = msg.value;
+        locked = true;
+
+        return true;
+    }
+
+    function cancel()
+        public
+        isOwner
+        returns(bool success)
+    {
+        require(paid != true);
+        // cancel order and refund
+        selfdestruct(msg.sender);
+
+        return true;
+    }
+
+    function processPayment()
+        public
+        returns(bool success)
+    {
+        require(msg.sender == shop);
+        require(balance > 0);
+
+        msg.sender.transfer(balance);
+
+        balance = 0;
+        paid = true;
+        //LogPayment(msg.sender, balance);
+
+        return true;
+    }*/
 }

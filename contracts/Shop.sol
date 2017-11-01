@@ -13,6 +13,7 @@ contract Shop is Killable {
     struct OrderStruct {
         Order order;
         uint index;
+        bool paid;
     }
 
     mapping (address => ProductStruct) public productsStruct;
@@ -21,6 +22,7 @@ contract Shop is Killable {
     address[] public orderIndex;
 
     address public merchant;
+    uint public balance;
 
     event LogAddProduct(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 category, uint price, uint stock, bytes32 image);
     event LogRemoveProduct(address indexed who, address indexed product,  bytes32 indexed name, bytes32 sku, bytes32 category);
@@ -95,8 +97,20 @@ contract Shop is Killable {
         // Hmm removing this here will be a problem if it exists on any orders; but we should write product details when an order is submitted
     }
 
+    function processPayment(address _order)
+        public
+        payable
+        returns(bool success)
+    {
+        require(ordersStruct[_order].order != address(0));
+        require(balance + msg.value > balance);
+
+        return true;
+    }
+
     function submitOrder(address _order)
         public
+        payable
         returns(bool success)
     {
         // validate order
@@ -105,12 +119,39 @@ contract Shop is Killable {
         // Only 10 unique items - no unnounded looping
         require(untrustedOrder.killed() != true);
         require(untrustedOrder.paused() != true);
+        require(untrustedOrder.locked() == true);
+        require(untrustedOrder.total() > 0);
+        require(msg.value == untrustedOrder.total());
+        require(msg.value + balance > balance);
+
+        balance += msg.value;
 
         uint productCount = untrustedOrder.getProductCount();
 
         require(productCount > 0);
         require(productCount < 10);
-        require(untrustedOrder.payment());
+
+        uint orderTotal = 0;
+
+        // accounting, in case we have been duped
+        for (uint8 i = 0; i < productCount; i++) {
+            Product product = Product(untrustedOrder.getProductAtIndex(i));
+
+            uint productQuantity = untrustedOrder.getProductQuantityAtIndex(i);
+
+            require(productQuantity > 0);
+
+            uint productPrice = product.price();
+            uint productTotal = productPrice * productQuantity;
+
+            require(productTotal > 0);
+            require(productTotal > productPrice);
+            require(orderTotal + productTotal > orderTotal);
+
+            orderTotal += productPrice;
+        }
+
+        require(orderTotal == msg.value);
 
         orderIndex.push(untrustedOrder);
         ordersStruct[untrustedOrder].order = untrustedOrder;
