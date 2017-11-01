@@ -32,6 +32,7 @@ contract Killable is Pauseable {
         LogEmergencyWithdrawal(msg.sender, this.balance);
         msg.sender.transfer(this.balance);
         //suicide??
+        selfdestruct(msg.sender); // test this
         return true;
     }
 }
