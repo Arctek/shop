@@ -5,20 +5,20 @@ import "./Killable.sol";
 contract Product is Ownable {
     address public merchant;
 
-    string public name;
+    bytes32 public name;
     bytes32 public sku;
-    string public category;
+    bytes32 public category;
     uint public price;
     uint public stock;
-    string public image;
+    bytes32 public image;
 
-    event LogUpdate(address indexed who, string indexed name, bytes32 indexed sku, string indexed category, uint price, uint stock, string image);
-    event LogSetName(address indexed who, string indexed name, bytes32 indexed sku);
-    event LogSetSku(address indexed who, string indexed name, bytes32 indexed sku);
-    event LogSetCategory(address indexed who, string indexed name, bytes32 indexed sku, string indexed category);
-    event LogSetPrice(address indexed who, string indexed name, bytes32 indexed sku, uint price);
-    event LogSetStock(address indexed who, string indexed name, bytes32 indexed sku, uint stock);
-    event LogSetImage(address indexed who, string indexed name, bytes32 indexed sku, string image);
+    event LogUpdate(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 category, uint price, uint stock, bytes32 image);
+    event LogSetName(address indexed who, bytes32 indexed name, bytes32 indexed sku);
+    event LogSetSku(address indexed who, bytes32 indexed name, bytes32 indexed sku);
+    event LogSetCategory(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 category);
+    event LogSetPrice(address indexed who, bytes32 indexed name, bytes32 indexed sku, uint price);
+    event LogSetStock(address indexed who, bytes32 indexed name, bytes32 indexed sku, uint stock);
+    event LogSetImage(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 image);
     event LogDestroy(address indexed who);
 
     modifier isOwnerOrMerchant() {
@@ -26,7 +26,7 @@ contract Product is Ownable {
         _;
     }
 
-    function Product(address _merchant, string _name, bytes32 _sku, string _category, uint _price, uint _stock, string _image) public {
+    function Product(address _merchant, bytes32 _name, bytes32 _sku, bytes32 _category, uint _price, uint _stock, bytes32 _image) public {
         require(_name != "");
         require(_sku != "");
         require(_category != "");
@@ -41,7 +41,7 @@ contract Product is Ownable {
         image = _image;
     }
 
-    function update(string _name, bytes32 _sku, string _category, uint _price, uint _stock, string _image) 
+    function update(bytes32 _name, bytes32 _sku, bytes32 _category, uint _price, uint _stock, bytes32 _image) 
         public
         isOwnerOrMerchant
         returns(bool success) 
@@ -74,7 +74,7 @@ contract Product is Ownable {
         return true;
     }
 
-    function setName(string _name) 
+    function setName(bytes32 _name) 
         public
         isOwnerOrMerchant
         returns(bool success) 
@@ -102,7 +102,7 @@ contract Product is Ownable {
         return true;
     }
 
-    function setCategory(string _category) 
+    function setCategory(bytes32 _category) 
         public
         isOwnerOrMerchant
         returns(bool success) 
@@ -140,7 +140,7 @@ contract Product is Ownable {
         return true;
     }
 
-    function setImage(string _image) 
+    function setImage(bytes32 _image) 
         public
         isOwnerOrMerchant
         returns(bool success) 

@@ -3,11 +3,16 @@ pragma solidity 0.4.15;
 import "./Shop.sol";
 
 contract ShopFactory is Ownable {
-    mapping (address => Shop) public shops;
+    struct ShopStruct {
+        Shop shop;
+        uint index;
+    }
+
+    mapping (address => ShopStruct) public shopsStruct;
     address[] public shopIndex;
 
-    modifier onlyIfShop(address shop) {
-        require(shops[campaign]);
+    modifier onlyIfShop(address shopAddress) {
+        require(shopsStruct[shopAddress].shop != address(0));
         _;
     }
 
@@ -23,14 +28,15 @@ contract ShopFactory is Ownable {
     
     function deployShop(/* shop name etc */)
         public
-        returns(address campaignContract)
+        returns(address shopContract)
     {
         Shop trustedShop = new Shop(msg.sender);
-        shopIndex.push(trustedCampaign);
-        shops[trustedCampaign] = trustedCampaign;
+        shopIndex.push(trustedShop);
+        shopsStruct[trustedShop].shop = trustedShop;
+        shopsStruct[trustedShop].index = shopIndex.length;
 
         LogDeployShop(msg.sender);
 
-        return trustedCampaign;
+        return trustedShop;
     }
 }
