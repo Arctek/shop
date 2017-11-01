@@ -1,0 +1,29 @@
+{
+  "name": "b9-shop-front",
+  "version": "1.0.0",
+  "description": "B9 Shopfront Ethereum Developer Course",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test",
+    "lintsol": "./node_modules/.bin/solium --dir ./contracts/"
+  },
+  "author": "Joshua Richardson (Arctek)",
+  "license": "MIT",
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
+    "bluebird": "^3.5.1",
+    "chai": "^4.1.2",
+    "ethereumjs-util": "^5.1.2",
+    "lodash": "^4.17.4",
+    "solium": "^0.5.5"
+  },
+  "devDependencies": {
+    "eth-gas-reporter": "0.0.12",
+    "webpack": "^3.8.1"
+  }
+}
