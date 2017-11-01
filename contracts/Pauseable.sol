@@ -2,17 +2,17 @@ pragma solidity 0.4.15;
 
 import "./Ownable.sol";
 
-contract Pauseable is Ownable{
+contract Pauseable is Ownable {
     bool public paused;
 
     event LogSetPaused(address indexed who, bool indexed paused);
 
-    modifier isPaused(){
+    modifier isPaused() {
         require(paused);
         _;
     }
 
-    modifier isNotPaused(){
+    modifier isNotPaused() {
         require(!paused);
         _;
     }
