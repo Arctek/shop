@@ -76,7 +76,7 @@ contract Shop is Killable {
         public
         returns(bool success)
     {
-        require(_merchant != address(0);
+        require(_merchant != address(0));
         require(_merchant != merchant);
 
         merchant = _merchant;

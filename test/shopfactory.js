@@ -1,7 +1,6 @@
 'use strict';
 
 const ShopFactory = artifacts.require("./ShopFactory.sol");
-const Shop = artifacts.require("./Shop.sol");
 
 import { default as Promise } from 'bluebird';
 
@@ -19,6 +18,7 @@ assert.topicContainsAddress = require("../test_util/topicContainsAddress.js");
 
 contract('ShopFactory', accounts => {
     const gasToUse = 3000000;
+    const shopName = "Bobs Widgets";
     let owner, bob;
 
     before("should prepare accounts", function() {
@@ -33,29 +33,38 @@ contract('ShopFactory', accounts => {
 
     
     beforeEach(() => {
-        return ShopFactory.new({ from: owner }).then(instance => factoryContract = instance);
-    });
-
-    beforeEach(() => {
-        return Shop.new({ from: owner }).then(instance => shopContract = instance);
+        return ShopFactory.new({ from: owner }).then(instance => contract = instance);
     });
 
     it('should not allow deploy shop with no shop name', () => {
+        return web3.eth.expectedExceptionPromise(() => 
+            contract.deployShop("", { from: bob, gas: gasToUse }),
+        gasToUse);
+    });
+
+    it('should allow deploying a shop', async () => {
+        let txObject = await contract.deployShop(shopName, { from: bob, gas: gasToUse });
         
+        assertLogDeployShop(txObject, bob, shopName);
     });
 
 });
 
-function assertEventLogKill(txObject, who) {
+function assertLogDeployShop(txObject, merchant, shopName) {
     assert.equal(txObject.logs.length, 1, "should have received 1 event");
-    assert.strictEqual(txObject.logs[0].event, "LogKill", "should have received LogKill event");
+    assert.strictEqual(txObject.logs[0].event, "LogDeployShop", "should have received LogKill event");
                 
     assert.strictEqual(
-        txObject.logs[0].args.who,
-        who,
-        "should be the owner");
+        txObject.logs[0].args.merchant,
+        merchant,
+        "should be the merchant");
+    assert.include(
+        web3.toAscii(txObject.logs[0].args.shopName),
+        shopName,
+        "should be the shop name");
     
-    assert.strictEqual(txObject.receipt.logs[0].topics.length, 2, "should have 2 topics");
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
 
-    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], merchant);
+    assert.include(web3.toAscii(txObject.receipt.logs[0].topics[2]), shopName, "should be the shop name");
 }
