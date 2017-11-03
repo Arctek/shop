@@ -51,7 +51,7 @@ contract('ShopFactory', accounts => {
 
 function assertLogDeployShop(txObject, merchant, shopName) {
     assert.equal(txObject.logs.length, 1, "should have received 1 event");
-    assert.strictEqual(txObject.logs[0].event, "LogDeployShop", "should have received LogKill event");
+    assert.strictEqual(txObject.logs[0].event, "LogDeployShop", "should have received LogDeployShop event");
                 
     assert.strictEqual(
         txObject.logs[0].args.merchant,

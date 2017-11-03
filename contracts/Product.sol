@@ -13,12 +13,13 @@ contract Product is Ownable {
     bytes32 public image;
 
     event LogUpdate(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 category, uint price, uint stock, bytes32 image);
-    event LogSetName(address indexed who, bytes32 indexed name, bytes32 indexed sku);
-    event LogSetSku(address indexed who, bytes32 indexed name, bytes32 indexed sku);
-    event LogSetCategory(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 category);
-    event LogSetPrice(address indexed who, bytes32 indexed name, bytes32 indexed sku, uint price);
-    event LogSetStock(address indexed who, bytes32 indexed name, bytes32 indexed sku, uint stock);
-    event LogSetImage(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 image);
+    event LogSetMerchant(address indexed who, address indexed merchant);
+    event LogSetName(address indexed who, bytes32 indexed name);
+    event LogSetSku(address indexed who, bytes32 indexed sku);
+    event LogSetCategory(address indexed who, bytes32 indexed category);
+    event LogSetPrice(address indexed who, uint indexed price);
+    event LogSetStock(address indexed who, uint indexed stock);
+    event LogSetImage(address indexed who, bytes32 indexed image);
     event LogDestroy(address indexed who);
 
     modifier isOwnerOrMerchant() {
@@ -75,16 +76,32 @@ contract Product is Ownable {
         return true;
     }
 
+    function setMerchant(address _merchant)
+        isOwnerOrMerchant
+        public
+        returns(bool success)
+    {
+        require(_merchant != address(0));
+        require(_merchant != merchant);
+
+        merchant = _merchant;
+
+        LogSetMerchant(msg.sender, _merchant);
+
+        return true;
+    }
+
     function setName(bytes32 _name) 
         public
         isOwnerOrMerchant
         returns(bool success) 
     {
         require(_name != "");
+        require(_name != name);
 
         name = _name;
 
-        LogSetName(msg.sender, _name, sku);
+        LogSetName(msg.sender, _name);
 
         return true;
     }
@@ -95,10 +112,11 @@ contract Product is Ownable {
         returns(bool success) 
     {
         require(_sku != "");
+        require(_sku != sku);
 
         sku = _sku;
 
-        LogSetSku(msg.sender, name, _sku);
+        LogSetSku(msg.sender, _sku);
 
         return true;
     }
@@ -109,10 +127,11 @@ contract Product is Ownable {
         returns(bool success) 
     {
         require(_category != "");
+        require(_category != category);
 
         category = _category;
 
-        LogSetCategory(msg.sender, name, sku, _category);
+        LogSetCategory(msg.sender, _category);
 
         return true;
     }
@@ -122,9 +141,10 @@ contract Product is Ownable {
         isOwnerOrMerchant
         returns(bool success) 
     {
+        require(_price != price);
         price = _price;
 
-        LogSetPrice(msg.sender, name, sku, _price);
+        LogSetPrice(msg.sender, _price);
 
         return true;
     }
@@ -134,9 +154,10 @@ contract Product is Ownable {
         isOwnerOrMerchant
         returns(bool success) 
     {
+        require(_stock != stock);
         stock = _stock;
 
-        LogSetStock(msg.sender, name, sku, _stock);
+        LogSetStock(msg.sender, _stock);
 
         return true;
     }
@@ -146,9 +167,10 @@ contract Product is Ownable {
         isOwnerOrMerchant
         returns(bool success) 
     {
+        require(_image != image);
         image = _image;
 
-        LogSetImage(msg.sender, name, sku, _image);
+        LogSetImage(msg.sender, _image);
 
         return true;
     }
