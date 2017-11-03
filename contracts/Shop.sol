@@ -23,9 +23,13 @@ contract Shop is Killable {
 
     address public merchant;
     uint public balance;
+    bytes32 public name;
 
+    event LogSetShopName(address indexed who, bytes32 indexed name);
+    event LogSetMerchant(address indexed who, address indexed merchant);
     event LogAddProduct(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 category, uint price, uint stock, bytes32 image);
     event LogRemoveProduct(address indexed who, address indexed product,  bytes32 indexed name, bytes32 sku, bytes32 category);
+    event LogSubmitOrder(address indexed who, address indexed order);
 
     modifier isOwnerOrMerchant() {
         require(msg.sender == owner || msg.sender == merchant);
@@ -37,9 +41,11 @@ contract Shop is Killable {
         _;
     }
 
-    function Shop(address _merchant) public {
-        require(merchant != address(0));
+    function Shop(address _merchant, bytes32 _name) public {
+        require(_merchant != address(0));
+        require(_name != "");
         merchant = _merchant;
+        name = _name;
     }
 
     function getProductCount()
@@ -48,6 +54,36 @@ contract Shop is Killable {
         returns(uint productCount)
     {
         return productIndex.length;
+    }
+
+    function setShopName(bytes32 _name)
+        isOwnerOrMerchant
+        public
+        returns(bool success)
+    {
+        require(_name != "");
+        require(_name != name);
+
+        name = _name;
+
+        LogSetShopName(msg.sender, _name);
+
+        return true;
+    }
+
+    function setMerchant(address _merchant)
+        isOwnerOrMerchant
+        public
+        returns(bool success)
+    {
+        require(_merchant != address(0);
+        require(_merchant != merchant);
+
+        merchant = _merchant;
+
+        LogSetMerchant(msg.sender, _merchant);
+
+        return true;
     }
 
     function addProduct(bytes32 _name, bytes32 _sku, bytes32 _category, uint _price, uint _stock, bytes32 _image)
@@ -97,7 +133,7 @@ contract Shop is Killable {
         // Hmm removing this here will be a problem if it exists on any orders; but we should write product details when an order is submitted
     }
 
-    function processPayment(address _order)
+    /*function processPayment(address _order)
         public
         payable
         returns(bool success)
@@ -106,7 +142,7 @@ contract Shop is Killable {
         require(balance + msg.value > balance);
 
         return true;
-    }
+    }*/
 
     function submitOrder(address _order)
         public
@@ -165,6 +201,8 @@ contract Shop is Killable {
         orderIndex.push(untrustedOrder);
         ordersStruct[untrustedOrder].order = untrustedOrder;
         ordersStruct[untrustedOrder].index = orderIndex.length;
+
+        LogSubmitOrder(msg.sender, _order);
 
         return true;
     }

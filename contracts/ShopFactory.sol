@@ -11,6 +11,8 @@ contract ShopFactory is Ownable {
     mapping (address => ShopStruct) public shopsStruct;
     address[] public shopIndex;
 
+    event LogDeployShop(address indexed merchant, bytes32 indexed shopName);
+
     modifier onlyIfShop(address shopAddress) {
         require(shopsStruct[shopAddress].shop != address(0));
         _;
@@ -26,16 +28,18 @@ contract ShopFactory is Ownable {
         return shopIndex.length;
     }
     
-    function deployShop(/* shop name etc */)
+    function deployShop(bytes32 shopName)
         public
         returns(address shopContract)
     {
-        Shop trustedShop = new Shop(msg.sender);
+        require(shopName != "");
+        
+        Shop trustedShop = new Shop(msg.sender, shopName);
         shopIndex.push(trustedShop);
         shopsStruct[trustedShop].shop = trustedShop;
         shopsStruct[trustedShop].index = shopIndex.length;
 
-        LogDeployShop(msg.sender);
+        LogDeployShop(msg.sender, shopName);
 
         return trustedShop;
     }

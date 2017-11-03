@@ -27,6 +27,10 @@ contract Order is Killable {
     uint public total;
     //uint public balance;
 
+    event LogAddProduct(address indexed who, address indexed product, uint quantity);
+    event LogRemoveProduct(address indexed who, address indexed product, uint quantity);
+    event LogSetStatus(address indexed who, OrderStatus indexed status);
+
     modifier isCreated() {
         require(status == OrderStatus.Created);
         _;
@@ -97,7 +101,7 @@ contract Order is Killable {
             productsStruct[untrustedProduct].image = untrustedProduct.image();
         }
 
-        //LogAddProduct(msg.sender, _product, _quantity);
+        LogAddProduct(msg.sender, _product, _quantity);
 
         return true;
     }
@@ -123,7 +127,7 @@ contract Order is Killable {
             productsStruct[_product].quantity -= _quantity;
         }
 
-        //LogRemoveProduct(msg.sender, _product, productName, productSku, productCategory);
+        LogRemoveProduct(msg.sender, _product, _quantity);
 
         return true;
     }
@@ -135,6 +139,8 @@ contract Order is Killable {
         require(msg.sender == shop);
 
         status = _status;
+
+        LogSetStatus(msg.sender, _status);
 
         return true;
     }
