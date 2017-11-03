@@ -27,6 +27,7 @@ contract Product is Ownable {
     }
 
     function Product(address _merchant, bytes32 _name, bytes32 _sku, bytes32 _category, uint _price, uint _stock, bytes32 _image) public {
+        require(_merchant != address(0));
         require(_name != "");
         require(_sku != "");
         require(_category != "");
