@@ -119,7 +119,7 @@ contract Shop is Killable {
         // Only 10 unique items - no unnounded looping
         require(untrustedOrder.killed() != true);
         require(untrustedOrder.paused() != true);
-        require(untrustedOrder.locked() == true);
+        require(untrustedOrder.status() == Order.OrderStatus.Created);
         require(untrustedOrder.total() > 0);
         require(msg.value == untrustedOrder.total());
         require(msg.value + balance > balance);
@@ -133,25 +133,34 @@ contract Shop is Killable {
 
         uint orderTotal = 0;
 
+        //Product[] memory orderProducts;
+
         // accounting, in case we have been duped
         for (uint8 i = 0; i < productCount; i++) {
-            Product product = Product(untrustedOrder.getProductAtIndex(i));
+            Product untrustedProduct = Product(untrustedOrder.getProductAtIndex(i));
 
             uint productQuantity = untrustedOrder.getProductQuantityAtIndex(i);
+            uint productStock = untrustedProduct.stock();
+            uint remainingStock = productStock - productQuantity;
 
             require(productQuantity > 0);
+            require(productQuantity <= untrustedProduct.stock());
+            require(remainingStock < productStock);
 
-            uint productPrice = product.price();
+            uint productPrice = untrustedProduct.price();
             uint productTotal = productPrice * productQuantity;
 
             require(productTotal > 0);
             require(productTotal > productPrice);
             require(orderTotal + productTotal > orderTotal);
 
-            orderTotal += productPrice;
+            require(untrustedProduct.setStock(remainingStock));
+
+            orderTotal += productPrice;            
         }
 
         require(orderTotal == msg.value);
+        require(untrustedOrder.setStatus(Order.OrderStatus.Paid));
 
         orderIndex.push(untrustedOrder);
         ordersStruct[untrustedOrder].order = untrustedOrder;

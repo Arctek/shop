@@ -16,18 +16,19 @@ contract Order is Killable {
         bytes32 image;
     }
 
+    enum OrderStatus { Created, Paid, Cancelled }
+
     mapping (address => ProductStruct) public productsStruct;
     address[] public productIndex; // max 10 unique products per order
 
     address public shop;
 
-    bool public locked;
-    //bool public paid;
+    OrderStatus public status;
     uint public total;
     //uint public balance;
 
-    modifier isNotLocked() {
-        require(locked != true);
+    modifier isCreated() {
+        require(status == OrderStatus.Created);
         _;
     }
 
@@ -57,7 +58,7 @@ contract Order is Killable {
 
     function addProduct(address _product, uint _quantity)
         isOwner
-        isNotLocked
+        isCreated
         public
         returns(bool success)
     {
@@ -103,7 +104,7 @@ contract Order is Killable {
 
     function removeProduct(address _product, uint _quantity)
         isOwner
-        isNotLocked
+        isCreated
         public
         returns(bool success)
     {
@@ -127,13 +128,13 @@ contract Order is Killable {
         return true;
     }
 
-    function lock() 
+    function setStatus(OrderStatus _status) 
         public
         returns(bool success)
     {
         require(msg.sender == shop);
 
-        locked = true;
+        status = _status;
 
         return true;
     }
