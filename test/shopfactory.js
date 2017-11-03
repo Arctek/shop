@@ -47,7 +47,6 @@ contract('ShopFactory', accounts => {
         
         assertLogDeployShop(txObject, bob, shopName);
     });
-
 });
 
 function assertLogDeployShop(txObject, merchant, shopName) {
