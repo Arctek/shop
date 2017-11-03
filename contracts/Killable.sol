@@ -4,7 +4,7 @@ import "./Pauseable.sol";
 
 contract Killable is Pauseable {
     bool public killed;
-    bool public isWithdrawn;
+    //bool public isWithdrawn;
 
     event LogKill(address indexed who);
     event LogEmergencyWithdrawal(address indexed who, uint withdrawalAmount);
@@ -26,8 +26,8 @@ contract Killable is Pauseable {
     }
 
     function emergencyWithdrawal() public isOwner isKilled returns(bool success) {
-        require(!isWithdrawn);
-        isWithdrawn = true;
+        //require(!isWithdrawn);
+        //isWithdrawn = true;
         
         LogEmergencyWithdrawal(msg.sender, this.balance);
         msg.sender.transfer(this.balance);
