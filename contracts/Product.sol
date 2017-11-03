@@ -180,8 +180,8 @@ contract Product is Ownable {
         isOwner
         returns(bool success)
     {
-        selfdestruct(msg.sender);
         LogDestroy(msg.sender);
+        selfdestruct(msg.sender);
         return true;
     }
 }

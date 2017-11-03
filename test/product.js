@@ -163,7 +163,7 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should not allow the same merchant', () => {
+            it('should not allow the same name', () => {
                 return web3.eth.expectedExceptionPromise(() => 
                     contract.setName(productName, { from: merchant }),
                 gasToUse);
@@ -187,7 +187,7 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should not allow the same merchant', () => {
+            it('should not allow the same sku', () => {
                 return web3.eth.expectedExceptionPromise(() => 
                     contract.setSku(productSku, { from: merchant }),
                 gasToUse);
@@ -211,7 +211,7 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should not allow the same merchant', () => {
+            it('should not allow the same category', () => {
                 return web3.eth.expectedExceptionPromise(() => 
                     contract.setCategory(productCategory, { from: merchant }),
                 gasToUse);
@@ -227,14 +227,79 @@ contract('Product', accounts => {
                 assert.strictEqual(contractProductCategory, web3.toHexPacked(updateProductCategory, 66), "category does not match expected value");
             });
         });
-    });
 
-    
-    
-    /*assert.disallowPausedKilledActions([
-        ["test", () => {}]
-    ]
-    , merchant, gas);*/
+        describe("Set Price Function", () => {
+            it('should not allow the same price', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.setPrice(productPrice, { from: merchant }),
+                gasToUse);
+            });
+
+            it('should set the price', async () => {
+                let txObject = await contract.setPrice(updateProductPrice, { from: merchant });
+
+                assertLogSetPrice(txObject, merchant, updateProductPrice);
+                
+                let contractProductPrice = await contract.price();
+
+                assert.deepEqual(contractProductPrice, updateProductPrice, "price does not match expected value");
+            });
+        });
+
+        describe("Set Stock Function", () => {
+            it('should not allow the same stock', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.setStock(productStock, { from: merchant }),
+                gasToUse);
+            });
+
+            it('should set the stock', async () => {
+                let txObject = await contract.setStock(updateProductStock, { from: merchant });
+
+                assertLogSetStock(txObject, merchant, updateProductStock);
+                
+                let contractProductStock = await contract.stock();
+
+                assert.deepEqual(contractProductStock, updateProductStock, "stock does not match expected value");
+            });
+        });
+
+        describe("Set Image Function", () => {
+            it('should not allow the same image', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.setImage(productImage, { from: merchant }),
+                gasToUse);
+            });
+
+            it('should set the image', async () => {
+                let txObject = await contract.setImage(updateProductImage, { from: merchant });
+
+                assertLogSetImage(txObject, merchant, updateProductImage);
+                
+                let contractProductImage = await contract.image();
+
+                assert.strictEqual(contractProductImage, web3.toHexPacked(updateProductImage, 66), "image does not match expected value");
+            });
+        });
+
+        describe("Destroy Function", () => {
+            it('should not allow non-owner', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.destroy({ from: bob }),
+                gasToUse);
+            });
+
+            it('should self destruct', async () => {
+                let txObject = await contract.destroy({ from: merchant });
+
+                assertLogDestroy(txObject, merchant);
+                
+                let contractMerchant = await contract.merchant();
+
+                assert.strictEqual(contractMerchant, "0x", "merchant should be blank");
+            });
+        });
+    });
 });
 
 function assertNotFail(error)  {
@@ -348,4 +413,75 @@ function assertLogSetCategory(txObject, who, category) {
 
     assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
     assert.include(web3.toAscii(txObject.receipt.logs[0].topics[2]), category, "should be the category");
+}
+
+function assertLogSetPrice(txObject, who, price) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogSetPrice", "should have received LogSetPrice event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.deepEqual(
+        txObject.logs[0].args.price,
+        price,
+        "should be price");
+    
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.deepEqual(web3.toBigNumber(txObject.receipt.logs[0].topics[2]), price, "should be the price");
+}
+
+function assertLogSetStock(txObject, who, stock) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogSetStock", "should have received LogSetStock event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.deepEqual(
+        txObject.logs[0].args.stock,
+        stock,
+        "should be stock");
+    
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.deepEqual(web3.toBigNumber(txObject.receipt.logs[0].topics[2]), stock, "should be the stock");
+}
+
+function assertLogSetImage(txObject, who, image) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogSetImage", "should have received LogSetImage event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.strictEqual(
+        txObject.logs[0].args.image,
+        web3.toHexPacked(image, 66),
+        "should be merchant");
+    
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.include(web3.toAscii(txObject.receipt.logs[0].topics[2]), image, "should be the image");
+}
+
+function assertLogDestroy(txObject, who) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogDestroy", "should have received LogDestroy event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 2, "should have 2 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
 }

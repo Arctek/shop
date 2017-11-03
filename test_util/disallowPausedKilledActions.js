@@ -7,7 +7,7 @@
 module.exports = function disallowPausedKilledActions(_web3) {
     const web3 = _web3;
 
-    return function(functions, owner, gas) {
+    return function(functions, contract, owner, gas) {
         describe("Paused contract", () => {
             beforeEach("should pause the contract", () => {
                 return contract.setPaused(true, { from: owner });
