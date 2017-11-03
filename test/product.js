@@ -179,6 +179,54 @@ contract('Product', accounts => {
                 assert.strictEqual(contractProductName, web3.toHexPacked(updateProductName, 66), "name does not match expected value");
             });
         });
+
+        describe("Set Sku Function", () => {
+            it('should not allow a blank sku', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.setSku("", { from: merchant }),
+                gasToUse);
+            });
+
+            it('should not allow the same merchant', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.setSku(productSku, { from: merchant }),
+                gasToUse);
+            });
+
+            it('should set the sku', async () => {
+                let txObject = await contract.setSku(updateProductSku, { from: merchant });
+
+                assertLogSetSku(txObject, merchant, updateProductSku);
+                
+                let contractProductSku = await contract.sku();
+
+                assert.strictEqual(contractProductSku, web3.toHexPacked(updateProductSku, 66), "sku does not match expected value");
+            });
+        });
+
+        describe("Set Category Function", () => {
+            it('should not allow a blank category', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.setCategory("", { from: merchant }),
+                gasToUse);
+            });
+
+            it('should not allow the same merchant', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.setCategory(productCategory, { from: merchant }),
+                gasToUse);
+            });
+
+            it('should set the category', async () => {
+                let txObject = await contract.setCategory(updateProductCategory, { from: merchant });
+
+                assertLogSetCategory(txObject, merchant, updateProductCategory);
+                
+                let contractProductCategory = await contract.category();
+
+                assert.strictEqual(contractProductCategory, web3.toHexPacked(updateProductCategory, 66), "category does not match expected value");
+            });
+        });
     });
 
     
@@ -262,4 +310,42 @@ function assertLogSetName(txObject, who, name) {
 
     assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
     assert.include(web3.toAscii(txObject.receipt.logs[0].topics[2]), name, "should be the name");
+}
+
+function assertLogSetSku(txObject, who, sku) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogSetSku", "should have received LogSetSku event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.strictEqual(
+        txObject.logs[0].args.sku,
+        web3.toHexPacked(sku, 66),
+        "should be merchant");
+    
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.include(web3.toAscii(txObject.receipt.logs[0].topics[2]), sku, "should be the sku");
+}
+
+function assertLogSetCategory(txObject, who, category) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogSetCategory", "should have received LogSetCategory event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.strictEqual(
+        txObject.logs[0].args.category,
+        web3.toHexPacked(category, 66),
+        "should be merchant");
+    
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.include(web3.toAscii(txObject.receipt.logs[0].topics[2]), category, "should be the category");
 }
