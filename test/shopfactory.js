@@ -19,6 +19,7 @@ assert.topicContainsAddress = require("../test_util/topicContainsAddress.js");
 contract('ShopFactory', accounts => {
     const gasToUse = 3000000;
     const shopName = "Bobs Widgets";
+
     let owner, bob;
 
     before("should prepare accounts", function() {
@@ -30,17 +31,15 @@ contract('ShopFactory', accounts => {
             .then(() => web3.eth.makeSureHasAtLeast(owner, [bob, owner], web3.toWei(2)))
             .then(txObject => web3.eth.getTransactionReceiptMined(txObject));
     });
-
     
     beforeEach(() => {
         return ShopFactory.new({ from: owner }).then(instance => contract = instance);
     });
 
-    it('should not allow deploy shop with no shop name', () => {
-        return web3.eth.expectedExceptionPromise(() => 
-            contract.deployShop("", { from: bob, gas: gasToUse }),
-        gasToUse);
-    });
+    it('should not allow deploy shop with no shop name', () => 
+        web3.eth.expectedExceptionPromise(() => 
+            contract.deployShop("", { from: bob, gas: gasToUse }), gasToUse)
+    );
 
     it('should allow deploying a shop', async () => {
         let txObject = await contract.deployShop(shopName, { from: bob, gas: gasToUse });

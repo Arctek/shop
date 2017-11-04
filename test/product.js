@@ -101,29 +101,25 @@ contract('Product', accounts => {
         beforeEach(() => Product.new(merchant, productName, productSku, productCategory, productPrice, productStock, productImage, { from: owner }).then(instance => contract = instance));
 
         describe("Update Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.update(updateProductName, updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.update(updateProductName, updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: bob }), gasToUse)
+            );
 
-            it('should not allow a blank name', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.update("", updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow a blank name', () => 
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.update("", updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: merchant }), gasToUse)
+            );
 
-            it('should not allow a blank sku', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.update(updateProductName, "", updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow a blank sku', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.update(updateProductName, "", updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: merchant }), gasToUse)
+            );
 
-            it('should not allow a blank category', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.update(updateProductName, updateProductSku, "", updateProductPrice, updateProductStock, updateProductImage, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow a blank category', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.update(updateProductName, updateProductSku, "", updateProductPrice, updateProductStock, updateProductImage, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should update a product for ' + who, async() => {
@@ -152,23 +148,20 @@ contract('Product', accounts => {
 
 
         describe("Set Merchant Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setMerchant(bob, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () => 
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setMerchant(bob, { from: bob }), gasToUse)
+            );
 
-            it('should not allow a blank merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setMerchant(null, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow a blank merchant', () => 
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setMerchant(null, { from: merchant }), gasToUse)
+            );
 
-            it('should not allow the same merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setMerchant(merchant, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow the same merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setMerchant(merchant, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should set the merchant for ' + who, async () => {
@@ -184,23 +177,20 @@ contract('Product', accounts => {
         });
 
         describe("Set Name Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setName(updateProductName, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setName(updateProductName, { from: bob }), gasToUse)
+            );
 
-            it('should not allow a blank name', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setName("", { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow a blank name', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setName("", { from: merchant }), gasToUse)
+            );
 
-            it('should not allow the same name', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setName(productName, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow the same name', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setName(productName, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should set the name for ' + who, async () => {
@@ -216,23 +206,20 @@ contract('Product', accounts => {
         });
 
         describe("Set Sku Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setSku(updateProductSku, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setSku(updateProductSku, { from: bob }), gasToUse)
+            );
 
-            it('should not allow a blank sku', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setSku("", { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow a blank sku', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setSku("", { from: merchant }), gasToUse)
+            );
 
-            it('should not allow the same sku', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setSku(productSku, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow the same sku', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setSku(productSku, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should set the sku for ' + who, async () => {
@@ -248,23 +235,20 @@ contract('Product', accounts => {
         });
 
         describe("Set Category Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setCategory(productCategory, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setCategory(productCategory, { from: bob }), gasToUse)
+            );
 
-            it('should not allow a blank category', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setCategory("", { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow a blank category', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setCategory("", { from: merchant }), gasToUse)
+            );
 
-            it('should not allow the same category', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setCategory(productCategory, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow the same category', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setCategory(productCategory, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should set the category for ' + who, async () => {
@@ -280,17 +264,15 @@ contract('Product', accounts => {
         });
 
         describe("Set Price Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setPrice(updateProductPrice, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setPrice(updateProductPrice, { from: bob }), gasToUse)
+            );
 
-            it('should not allow the same price', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setPrice(productPrice, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow the same price', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setPrice(productPrice, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should set the price for ' + who, async () => {
@@ -306,17 +288,15 @@ contract('Product', accounts => {
         });
 
         describe("Set Stock Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setStock(updateProductStock, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setStock(updateProductStock, { from: bob }), gasToUse)
+            );
 
-            it('should not allow the same stock', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setStock(productStock, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow the same stock', () => 
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setStock(productStock, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should set the stock for ' + who, async () => {
@@ -332,17 +312,15 @@ contract('Product', accounts => {
         });
 
         describe("Set Image Function", () => {
-            it('should not allow non-owner or non-merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setImage(updateProductImage, { from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setImage(updateProductImage, { from: bob }), gasToUse)
+            );
 
-            it('should not allow the same image', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.setImage(productImage, { from: merchant }),
-                gasToUse);
-            });
+            it('should not allow the same image', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.setImage(productImage, { from: merchant }), gasToUse)
+            );
 
             for (const who in addressList) {
                 it('should set the image', async () => {
@@ -358,17 +336,15 @@ contract('Product', accounts => {
         });
 
         describe("Destroy Function", () => {
-            it('should not allow non-owner', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.destroy({ from: bob }),
-                gasToUse);
-            });
+            it('should not allow non-owner', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.destroy({ from: bob }), gasToUse)
+            );
 
-            it('should not allow merchant', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.destroy({ from: merchant }),
-                gasToUse);
-            });
+            it('should not allow merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.destroy({ from: merchant }), gasToUse)
+            );
 
             it('should self destruct', async () => {
                 let txObject = await contract.destroy({ from: owner });
