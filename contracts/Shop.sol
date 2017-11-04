@@ -86,7 +86,14 @@ contract Shop is Killable {
         return true;
     }
 
-    function addProduct(bytes32 _name, bytes32 _sku, bytes32 _category, uint _price, uint _stock, bytes32 _image)
+    function addProduct(
+        bytes32 _name,
+        bytes32 _sku,
+        bytes32 _category,
+        uint _price,
+        uint _stock,
+        bytes32 _image
+    )
         isOwnerOrMerchant
         public
         returns(address productContract)

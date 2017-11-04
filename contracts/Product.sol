@@ -27,7 +27,17 @@ contract Product is Ownable {
         _;
     }
 
-    function Product(address _merchant, bytes32 _name, bytes32 _sku, bytes32 _category, uint _price, uint _stock, bytes32 _image) public {
+    function Product(
+        address _merchant, 
+        bytes32 _name, 
+        bytes32 _sku, 
+        bytes32 _category, 
+        uint _price, 
+        uint _stock, 
+        bytes32 _image
+    ) 
+        public 
+    {
         require(_merchant != address(0));
         require(_name != "");
         require(_sku != "");
@@ -43,7 +53,14 @@ contract Product is Ownable {
         image = _image;
     }
 
-    function update(bytes32 _name, bytes32 _sku, bytes32 _category, uint _price, uint _stock, bytes32 _image) 
+    function update(
+        bytes32 _name,
+        bytes32 _sku,
+        bytes32 _category,
+        uint _price,
+        uint _stock,
+        bytes32 _image
+    ) 
         public
         isOwnerOrMerchant
         returns(bool success) 

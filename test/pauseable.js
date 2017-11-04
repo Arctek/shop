@@ -18,6 +18,7 @@ assert.topicContainsBoolean = require("../test_util/topicContainsBoolean.js");
 
 contract('Pauseable', accounts => {
     const gasToUse = 3000000;
+
     let owner, bob;
 
     before("should prepare accounts", () => {
@@ -87,5 +88,4 @@ function assertEventLogSetPause(txObject, who, paused) {
 
     assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
     assert.topicContainsBoolean(txObject.receipt.logs[0].topics[2], paused);
-
 }

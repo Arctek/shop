@@ -86,8 +86,7 @@ contract Order is Killable {
             require(productsStruct[untrustedProduct].quantity + _quantity < productStock);
 
             productsStruct[untrustedProduct].quantity += _quantity;
-        }
-        else {
+        } else {
             require(productIndex.length + 1 < 10);
 
             productIndex.push(untrustedProduct);
@@ -121,8 +120,7 @@ contract Order is Killable {
             productIndex[rowToDelete] = keyToMove; 
             productsStruct[keyToMove].index = rowToDelete;
             productIndex.length = productIndex.length - 1;
-        }
-        else {
+        } else {
             require(productsStruct[_product].quantity - _quantity > 0);
             productsStruct[_product].quantity -= _quantity;
         }
