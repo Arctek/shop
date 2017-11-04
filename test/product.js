@@ -46,7 +46,7 @@ contract('Product', accounts => {
         merchant = accounts[1];
         bob = accounts[2];
 
-        return web3.eth.makeSureAreUnlocked([merchant, bob])
+        return web3.eth.makeSureAreUnlocked([owner, merchant, bob])
             .then(() => web3.eth.makeSureHasAtLeast(owner, [merchant, bob], web3.toWei(2)))
             .then(txObject => web3.eth.getTransactionReceiptMined(txObject))
             .then(() => web3.eth.makeSureHasAtLeast(merchant, [owner, bob], web3.toWei(2)))

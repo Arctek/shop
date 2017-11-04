@@ -36,6 +36,11 @@ contract Order is Killable {
         _;
     }
 
+    function Order(Shop _shop) {
+        require(_shop.owner() != address(0));
+        shop = _shop;
+    }
+
     function getProductCount()
         public
         constant
@@ -141,6 +146,10 @@ contract Order is Killable {
         LogSetStatus(msg.sender, _status);
 
         return true;
+    }
+
+    function kill() public isCreated returns(bool success) {
+        return super.kill();
     }
 
     /*function pay()
