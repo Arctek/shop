@@ -32,9 +32,9 @@ contract('ShopFactory', accounts => {
             .then(txObject => web3.eth.getTransactionReceiptMined(txObject));
     });
     
-    beforeEach(() => {
-        return ShopFactory.new({ from: owner }).then(instance => contract = instance);
-    });
+    beforeEach(() =>
+        ShopFactory.new({ from: owner }).then(instance => contract = instance)
+    );
 
     it('should not allow deploy shop with no shop name', () => 
         web3.eth.expectedExceptionPromise(() => 

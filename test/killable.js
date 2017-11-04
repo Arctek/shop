@@ -22,6 +22,7 @@ assert.topicContainsAddress = require("../test_util/topicContainsAddress.js");
 contract('Killable', accounts => {
     const gasToUse = 3000000;
     const contractBalance = new web3.BigNumber((Math.floor(Math.random() * 100000) + 1) * 2);
+
     let owner, bob;
 
     let zeroBigNumber = new web3.BigNumber(0);
@@ -37,36 +38,33 @@ contract('Killable', accounts => {
     });
 
     describe("Contract and kill actions", () => {
-        beforeEach(() => {
-            return Killable.new({ from: owner }).then(instance => contract = instance);
-        });
+        beforeEach(() =>
+            Killable.new({ from: owner }).then(instance => contract = instance)
+        );
 
-        it('should be initialized as unkilled', () => {
-            return contract.killed().then(isKilled => { assert.isFalse(isKilled, "should not be killed"); });
-        });
+        it('should be initialized as unkilled', () =>
+            contract.killed().then(isKilled => { assert.isFalse(isKilled, "should not be killed"); })
+        );
 
-        it('should not allow owner to kill an unpaused contract', () => {
-            return web3.eth.expectedExceptionPromise(() => 
-                contract.kill({ from: owner, gas: gasToUse }),
-            gasToUse);
-        });
+        it('should not allow owner to kill an unpaused contract', () =>
+            web3.eth.expectedExceptionPromise(() => 
+                contract.kill({ from: owner, gas: gasToUse }), gasToUse)
+        );
 
         describe("Paused contract", () => {
-            beforeEach("should pause the contract", () => {
-                return contract.setPaused(true, { from: owner });
-            });
+            beforeEach("should pause the contract", () => 
+                contract.setPaused(true, { from: owner })
+            );
 
-            it('should not allow non-owner to kill the contract', () => {
-                return web3.eth.expectedExceptionPromise(() => 
-                    contract.kill({ from: bob, gas: gasToUse }),
-                gasToUse);
-            });
+            it('should not allow non-owner to kill the contract', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.kill({ from: bob, gas: gasToUse }), gasToUse)
+            );
 
-            it('should not allow the owner to emergency withdraw on a unkilled contract', () => {
-                return web3.eth.expectedExceptionPromise(() =>
-                    contract.emergencyWithdrawal({ from: owner, gas: gasToUse }),
-                gasToUse);
-            });
+            it('should not allow the owner to emergency withdraw on a unkilled contract', () =>
+                web3.eth.expectedExceptionPromise(() =>
+                    contract.emergencyWithdrawal({ from: owner, gas: gasToUse }), gasToUse)
+            );
 
             it('should allow owner to kill the contract', async () => {
                 let txObject = await contract.kill({ from: owner });
@@ -80,28 +78,27 @@ contract('Killable', accounts => {
     });
 
     describe("Withdraw actions", () => {
-        beforeEach("should create an UnsafeKillable contract", () => {
-            return UnsafeKillable.new({ from: owner }).then(instance => contract = instance);
-        });
+        beforeEach("should create an UnsafeKillable contract", () =>
+            UnsafeKillable.new({ from: owner }).then(instance => contract = instance)
+        );
 
-        beforeEach("should send some funds to the unsafe contract", () => {
-            return web3.eth.sendTransactionPromise({ from: owner, to: contract.address, value: contractBalance});
-        });
+        beforeEach("should send some funds to the unsafe contract", () =>
+            web3.eth.sendTransactionPromise({ from: owner, to: contract.address, value: contractBalance})
+        );
 
-        beforeEach("should pause the contract", () => {
-            return contract.setPaused(true, { from: owner });
-        });
+        beforeEach("should pause the contract", () =>
+            contract.setPaused(true, { from: owner })
+        );
 
-        beforeEach("should kill the contract", () => {
-            return contract.kill({ from: owner })
-                .then(txObject => { assertEventLogKill(txObject, owner); });
-        });
+        beforeEach("should kill the contract", () =>
+            contract.kill({ from: owner })
+                .then(txObject => { assertEventLogKill(txObject, owner); })
+        );
 
-        it('should not allow non-owner to emergency withdraw a killed contract', () => {
-            return web3.eth.expectedExceptionPromise(() => 
-                contract.emergencyWithdrawal({ from: bob, gas: gasToUse }),
-            gasToUse);
-        });
+        it('should not allow non-owner to emergency withdraw a killed contract', () =>
+            web3.eth.expectedExceptionPromise(() => 
+                contract.emergencyWithdrawal({ from: bob, gas: gasToUse }), gasToUse)
+        );
 
         it('should allow owner to emergency withdraw a killed contract', async () => {
             let ownerAccountBalance = await web3.eth.getBalancePromise(owner);
@@ -109,7 +106,6 @@ contract('Killable', accounts => {
 
             let txObject = await contract.emergencyWithdrawal({ from: owner });
             let tx = await web3.eth.getTransaction(txObject.tx);
-            //let withdrawn = await contract.isWithdrawn();
 
             let newOwnerAccountBalance = await web3.eth.getBalancePromise(owner);
             let newContractBalance = await web3.eth.getBalancePromise(contract.address);
@@ -119,23 +115,10 @@ contract('Killable', accounts => {
 
             assertEventLogEmergencyWithdrawal(txObject, owner);
             
-            assert.isAbove(newOwnerAccountBalance.toNumber(), expectedAccountBalance.toNumber(), "the emergency withdrawn amount was incorrect");
+            assert.isAtLeast(newOwnerAccountBalance.toNumber(), expectedAccountBalance.toNumber(), "the emergency withdrawn amount was incorrect");
             assert.deepEqual(newContractBalance, zeroBigNumber, "contract balance should be zero");
-            //assert.isTrue(withdrawn, "the is withdrawn state was not set correctly");
         });
-        
-        /* 
-        // at this point its just a normal address now
-        it('should not allow owner to emergency withdraw twice', async () => {
-            await contract.emergencyWithdrawal({ from: owner });
-
-            await web3.eth.expectedExceptionPromise(() => 
-                contract.emergencyWithdrawal({ from: owner, gas: gasToUse }), gasToUse);
-        });
-        */
-
     });
-
 });
 
 function assertEventLogKill(txObject, who) {
