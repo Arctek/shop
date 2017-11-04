@@ -20,27 +20,25 @@ contract('Pauseable', accounts => {
     const gasToUse = 3000000;
     let owner, bob;
 
-    before("should prepare accounts", function() {
+    before("should prepare accounts", () => {
         assert.isAtLeast(accounts.length, 2, "should have at least 2 accounts");
         owner = accounts[0];
         bob = accounts[1];
         return web3.eth.makeSureAreUnlocked([owner, bob]);
     });
 
-    beforeEach(() => {
-        return Pauseable.new({ from: owner }).then(instance => contract = instance);
-    });
+    beforeEach(() =>
+        Pauseable.new({ from: owner }).then(instance => contract = instance)
+    );
 
-    it('should be initialized as unpaused', () => {
-        return contract.paused().then(isPaused => { assert.strictEqual(isPaused, false, "paused was initialized incorrectly");
-        });
-    });
+    it('should be initialized as unpaused', () =>
+        contract.paused().then(isPaused => assert.strictEqual(isPaused, false, "paused was initialized incorrectly"))
+    );
 
-    it('should not allow non-owner to pause', () => {
-        return web3.eth.expectedExceptionPromise(() =>
-            contract.setPaused(true, { from: bob, gas: gasToUse }),
-        gasToUse);
-    });
+    it('should not allow non-owner to pause', () =>
+        web3.eth.expectedExceptionPromise(() =>
+            contract.setPaused(true, { from: bob, gas: gasToUse }), gasToUse)
+    );
 
     it('should allow owner to pause', async () => {
         let txObject = await contract.setPaused(true, { from: owner });
