@@ -35,9 +35,7 @@ contract Product is Ownable {
         uint _price, 
         uint _stock, 
         bytes32 _image
-    ) 
-        public 
-    {
+    ) {
         require(_merchant != address(0));
         require(_name != "");
         require(_sku != "");
