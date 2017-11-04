@@ -27,7 +27,7 @@ contract Shop is Killable {
 
     event LogSetShopName(address indexed who, bytes32 indexed name);
     event LogSetMerchant(address indexed who, address indexed merchant);
-    event LogAddProduct(address indexed who, bytes32 indexed name, bytes32 indexed sku, bytes32 category, uint price, uint stock, bytes32 image);
+    event LogAddProduct(address indexed who, address indexed product, bytes32 indexed name, bytes32 sku, bytes32 category, uint price, uint stock, bytes32 image);
     event LogRemoveProduct(address indexed who, address indexed product,  bytes32 indexed name, bytes32 sku, bytes32 category);
     event LogSubmitOrder(address indexed who, address indexed order);
 
@@ -106,9 +106,9 @@ contract Shop is Killable {
 
         productIndex.push(trustedProduct);
         productsStruct[trustedProduct].product = trustedProduct;
-        productsStruct[trustedProduct].index = productIndex.length;
+        productsStruct[trustedProduct].index = productIndex.length - 1;
 
-        LogAddProduct(msg.sender, _name, _sku, _category, _price, _stock, _image);
+        LogAddProduct(msg.sender, trustedProduct, _name, _sku, _category, _price, _stock, _image);
 
         return trustedProduct;
     }

@@ -22,7 +22,7 @@ contract('ShopFactory', accounts => {
 
     let owner, bob;
 
-    before("should prepare accounts", function() {
+    before("should prepare accounts", () => {
         assert.isAtLeast(accounts.length, 2, "should have at least 2 accounts");
         owner = accounts[0];
         bob = accounts[1];

@@ -79,7 +79,7 @@ contract Order is Killable {
         uint productStock = untrustedProduct.stock();
         uint productPrice = untrustedProduct.price();
 
-        require(productStock <= _quantity);
+        require(productStock >= _quantity);
 
         uint productTotal = productPrice * _quantity;
 
@@ -96,7 +96,7 @@ contract Order is Killable {
 
             productIndex.push(untrustedProduct);
             productsStruct[untrustedProduct].product = untrustedProduct;
-            productsStruct[untrustedProduct].index = productIndex.length;
+            productsStruct[untrustedProduct].index = productIndex.length - 1;
             productsStruct[untrustedProduct].name = untrustedProduct.name();
             productsStruct[untrustedProduct].sku = untrustedProduct.sku();
             productsStruct[untrustedProduct].category = untrustedProduct.category();
