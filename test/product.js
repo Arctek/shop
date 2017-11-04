@@ -35,41 +35,49 @@ contract('Product', accounts => {
     const updateProductStock = new web3.BigNumber((Math.floor(Math.random() * 30) + 1));
     const updateProductImage = "https://image";
 
-    let merchant, bob;
+    let owner, merchant, bob;
+
+    // have to set this here, otherwise loops outside of it() wont work
+    const addressList = { "owner": accounts[0], "merchant": accounts[1] };
 
     before("should prepare accounts", function() {
-        assert.isAtLeast(accounts.length, 2, "should have at least 2 accounts");
-        merchant = accounts[0];
-        bob = accounts[1];
+        assert.isAtLeast(accounts.length, 3, "should have at least 3 accounts");
+        owner = accounts[0];
+        merchant = accounts[1];
+        bob = accounts[2];
 
         return web3.eth.makeSureAreUnlocked([merchant, bob])
-            .then(() => web3.eth.makeSureHasAtLeast(merchant, [bob, merchant], web3.toWei(2)))
+            .then(() => web3.eth.makeSureHasAtLeast(owner, [merchant, bob], web3.toWei(2)))
+            .then(txObject => web3.eth.getTransactionReceiptMined(txObject))
+            .then(() => web3.eth.makeSureHasAtLeast(merchant, [owner, bob], web3.toWei(2)))
+            .then(txObject => web3.eth.getTransactionReceiptMined(txObject))
+            .then(() => web3.eth.makeSureHasAtLeast(bob, [owner, merchant], web3.toWei(1)))
             .then(txObject => web3.eth.getTransactionReceiptMined(txObject));
     });
 
     describe("Constructor", () => {
         it('should not allow blank merchant address', () =>
-            Product.new(null, productName, productSku, productCategory, productPrice, productStock, productImage, { from: merchant })
+            Product.new(null, productName, productSku, productCategory, productPrice, productStock, productImage, { from: owner })
             .then(() => { assert.fail('should have thrown before') }).catch(assertNotFail)
         );
 
         it('should not allow blank name', () =>
-            Product.new(merchant, "", productSku, productCategory, productPrice, productStock, productImage, { from: merchant })
+            Product.new(merchant, "", productSku, productCategory, productPrice, productStock, productImage, { from: owner })
             .then(() => { assert.fail('should have thrown before') }).catch(assertNotFail)
         );
 
         it('should not allow blank sku', () =>
-            Product.new(merchant, productName, "", productCategory, productPrice, productStock, productImage, { from: merchant })
+            Product.new(merchant, productName, "", productCategory, productPrice, productStock, productImage, { from: owner })
             .then(() => { assert.fail('should have thrown before') }).catch(assertNotFail)
         );
 
         it('should not allow blank category', () =>
-            Product.new(merchant, productName, productSku, "", productPrice, productStock, productImage, { from: merchant })
+            Product.new(merchant, productName, productSku, "", productPrice, productStock, productImage, { from: owner })
             .then(() => { assert.fail('should have thrown before') }).catch(assertNotFail)
         );
 
         it('should instantiate a product instance', async () => {
-            let contract = await Product.new(merchant, productName, productSku, productCategory, productPrice, productStock, productImage, { from: merchant });
+            let contract = await Product.new(merchant, productName, productSku, productCategory, productPrice, productStock, productImage, { from: owner });
             
             let contractMerchant = await contract.merchant();
             let contractProductName = await contract.name();
@@ -90,7 +98,7 @@ contract('Product', accounts => {
     });
 
     describe("Contract Functions", () => {
-        beforeEach(() => Product.new(merchant, productName, productSku, productCategory, productPrice, productStock, productImage, { from: merchant }).then(instance => contract = instance));
+        beforeEach(() => Product.new(merchant, productName, productSku, productCategory, productPrice, productStock, productImage, { from: owner }).then(instance => contract = instance));
 
         describe("Update Function", () => {
             it('should not allow non-owner or non-merchant', () => {
@@ -117,26 +125,31 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should update a product', async () => {
-                let txObject = await contract.update(updateProductName, updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: merchant });
-
-                assertLogUpdate(txObject, merchant, updateProductName, updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage);
+            for (const who in addressList) {
+                it('should update a product for ' + who, async() => {
+                    let address = addressList[who];
                 
-                let contractProductName = await contract.name();
-                let contractProductSku = await contract.sku();
-                let contractProductCategory = await contract.category();
-                let contractProductPrice = await contract.price();
-                let contractProductStock = await contract.stock();
-                let contractProductImage = await contract.image();
+                    let txObject = await contract.update(updateProductName, updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage, { from: address });
 
-                assert.strictEqual(contractProductName, web3.toHexPacked(updateProductName, 66), "name does not match expected value");
-                assert.strictEqual(contractProductSku, web3.toHexPacked(updateProductSku, 66), "sku does not match expected value");
-                assert.strictEqual(contractProductCategory, web3.toHexPacked(updateProductCategory, 66), "category does not match expected value");
-                assert.deepEqual(contractProductPrice, updateProductPrice, "price does not match expected value");
-                assert.deepEqual(contractProductStock, updateProductStock, "stock does not match expected value");
-                assert.strictEqual(contractProductImage, web3.toHexPacked(updateProductImage, 66), "image does not match expected value");
-            });
+                    assertLogUpdate(txObject, address, updateProductName, updateProductSku, updateProductCategory, updateProductPrice, updateProductStock, updateProductImage);
+                    
+                    let contractProductName = await contract.name();
+                    let contractProductSku = await contract.sku();
+                    let contractProductCategory = await contract.category();
+                    let contractProductPrice = await contract.price();
+                    let contractProductStock = await contract.stock();
+                    let contractProductImage = await contract.image();
+
+                    assert.strictEqual(contractProductName, web3.toHexPacked(updateProductName, 66), "name does not match expected value");
+                    assert.strictEqual(contractProductSku, web3.toHexPacked(updateProductSku, 66), "sku does not match expected value");
+                    assert.strictEqual(contractProductCategory, web3.toHexPacked(updateProductCategory, 66), "category does not match expected value");
+                    assert.deepEqual(contractProductPrice, updateProductPrice, "price does not match expected value");
+                    assert.deepEqual(contractProductStock, updateProductStock, "stock does not match expected value");
+                    assert.strictEqual(contractProductImage, web3.toHexPacked(updateProductImage, 66), "image does not match expected value");
+                });
+            }
         });
+
 
         describe("Set Merchant Function", () => {
             it('should not allow non-owner or non-merchant', () => {
@@ -157,15 +170,17 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should set the merchant', async () => {
-                let txObject = await contract.setMerchant(bob, { from: merchant });
+            for (const who in addressList) {
+                it('should set the merchant for ' + who, async () => {
+                    let txObject = await contract.setMerchant(bob, { from: addressList[who] });
 
-                assertLogSetMerchant(txObject, merchant, bob);
-                
-                let contractMerchant = await contract.merchant();
+                    assertLogSetMerchant(txObject, addressList[who], bob);
+                    
+                    let contractMerchant = await contract.merchant();
 
-                assert.strictEqual(contractMerchant, bob, "merchant does not match expected value");
-            });
+                    assert.strictEqual(contractMerchant, bob, "merchant does not match expected value");
+                });
+            }
         });
 
         describe("Set Name Function", () => {
@@ -187,15 +202,17 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should set the name', async () => {
-                let txObject = await contract.setName(updateProductName, { from: merchant });
+            for (const who in addressList) {
+                it('should set the name for ' + who, async () => {
+                    let txObject = await contract.setName(updateProductName, { from: addressList[who] });
 
-                assertLogSetName(txObject, merchant, updateProductName);
-                
-                let contractProductName = await contract.name();
+                    assertLogSetName(txObject, addressList[who], updateProductName);
+                    
+                    let contractProductName = await contract.name();
 
-                assert.strictEqual(contractProductName, web3.toHexPacked(updateProductName, 66), "name does not match expected value");
-            });
+                    assert.strictEqual(contractProductName, web3.toHexPacked(updateProductName, 66), "name does not match expected value");
+                });
+            }
         });
 
         describe("Set Sku Function", () => {
@@ -217,15 +234,17 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should set the sku', async () => {
-                let txObject = await contract.setSku(updateProductSku, { from: merchant });
+            for (const who in addressList) {
+                it('should set the sku for ' + who, async () => {
+                    let txObject = await contract.setSku(updateProductSku, { from: addressList[who] });
 
-                assertLogSetSku(txObject, merchant, updateProductSku);
-                
-                let contractProductSku = await contract.sku();
+                    assertLogSetSku(txObject, addressList[who], updateProductSku);
+                    
+                    let contractProductSku = await contract.sku();
 
-                assert.strictEqual(contractProductSku, web3.toHexPacked(updateProductSku, 66), "sku does not match expected value");
-            });
+                    assert.strictEqual(contractProductSku, web3.toHexPacked(updateProductSku, 66), "sku does not match expected value");
+                });
+            }
         });
 
         describe("Set Category Function", () => {
@@ -247,15 +266,17 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should set the category', async () => {
-                let txObject = await contract.setCategory(updateProductCategory, { from: merchant });
+            for (const who in addressList) {
+                it('should set the category for ' + who, async () => {
+                    let txObject = await contract.setCategory(updateProductCategory, { from: addressList[who] });
 
-                assertLogSetCategory(txObject, merchant, updateProductCategory);
-                
-                let contractProductCategory = await contract.category();
+                    assertLogSetCategory(txObject, addressList[who], updateProductCategory);
+                    
+                    let contractProductCategory = await contract.category();
 
-                assert.strictEqual(contractProductCategory, web3.toHexPacked(updateProductCategory, 66), "category does not match expected value");
-            });
+                    assert.strictEqual(contractProductCategory, web3.toHexPacked(updateProductCategory, 66), "category does not match expected value");
+                });
+            }
         });
 
         describe("Set Price Function", () => {
@@ -271,15 +292,17 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should set the price', async () => {
-                let txObject = await contract.setPrice(updateProductPrice, { from: merchant });
+            for (const who in addressList) {
+                it('should set the price for ' + who, async () => {
+                    let txObject = await contract.setPrice(updateProductPrice, { from: addressList[who] });
 
-                assertLogSetPrice(txObject, merchant, updateProductPrice);
-                
-                let contractProductPrice = await contract.price();
+                    assertLogSetPrice(txObject, addressList[who], updateProductPrice);
+                    
+                    let contractProductPrice = await contract.price();
 
-                assert.deepEqual(contractProductPrice, updateProductPrice, "price does not match expected value");
-            });
+                    assert.deepEqual(contractProductPrice, updateProductPrice, "price does not match expected value");
+                });
+            }
         });
 
         describe("Set Stock Function", () => {
@@ -295,15 +318,17 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should set the stock', async () => {
-                let txObject = await contract.setStock(updateProductStock, { from: merchant });
+            for (const who in addressList) {
+                it('should set the stock for ' + who, async () => {
+                    let txObject = await contract.setStock(updateProductStock, { from: addressList[who] });
 
-                assertLogSetStock(txObject, merchant, updateProductStock);
-                
-                let contractProductStock = await contract.stock();
+                    assertLogSetStock(txObject, addressList[who], updateProductStock);
+                    
+                    let contractProductStock = await contract.stock();
 
-                assert.deepEqual(contractProductStock, updateProductStock, "stock does not match expected value");
-            });
+                    assert.deepEqual(contractProductStock, updateProductStock, "stock does not match expected value");
+                });
+            }
         });
 
         describe("Set Image Function", () => {
@@ -319,15 +344,17 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
-            it('should set the image', async () => {
-                let txObject = await contract.setImage(updateProductImage, { from: merchant });
+            for (const who in addressList) {
+                it('should set the image', async () => {
+                    let txObject = await contract.setImage(updateProductImage, { from: addressList[who] });
 
-                assertLogSetImage(txObject, merchant, updateProductImage);
-                
-                let contractProductImage = await contract.image();
+                    assertLogSetImage(txObject, addressList[who], updateProductImage);
+                    
+                    let contractProductImage = await contract.image();
 
-                assert.strictEqual(contractProductImage, web3.toHexPacked(updateProductImage, 66), "image does not match expected value");
-            });
+                    assert.strictEqual(contractProductImage, web3.toHexPacked(updateProductImage, 66), "image does not match expected value");
+                });
+            }
         });
 
         describe("Destroy Function", () => {
@@ -337,14 +364,20 @@ contract('Product', accounts => {
                 gasToUse);
             });
 
+            it('should not allow merchant', () => {
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.destroy({ from: merchant }),
+                gasToUse);
+            });
+
             it('should self destruct', async () => {
-                let txObject = await contract.destroy({ from: merchant });
+                let txObject = await contract.destroy({ from: owner });
 
-                assertLogDestroy(txObject, merchant);
+                assertLogDestroy(txObject, owner);
                 
-                let contractMerchant = await contract.merchant();
+                let contractMerchant = await contract.owner();
 
-                assert.strictEqual(contractMerchant, "0x", "merchant should be blank");
+                assert.strictEqual(contractMerchant, "0x", "owner should be blank");
             });
         });
     });
