@@ -118,7 +118,7 @@ contract Order is Killable {
     {
         require(productsStruct[_product].product != address(0));
 
-        if (_quantity >= productsStruct[_product].quantity) {
+        if (_quantity >= productsStruct[_product].quantity || _quantity == 0) {
             uint rowToDelete = productsStruct[_product].index;
             address keyToMove = productIndex[productIndex.length-1]; 
 

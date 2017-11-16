@@ -88,10 +88,10 @@ contract('Order', accounts => {
                     orderContract.addProduct(null, productStock, { from: user }), gasToUse)
             );
 
-            it('should not allow zero quantity', () => {
-                return web3.eth.expectedExceptionPromise(() => 
+            it('should not allow zero quantity', () =>
+                web3.eth.expectedExceptionPromise(() => 
                     orderContract.addProduct(productContract.address, 0, { from: user }), gasToUse)
-            });
+            );
 
             it('should not allow quantity greater than product stock', () => 
                 web3.eth.expectedExceptionPromise(() => 
@@ -156,6 +156,99 @@ contract('Order', accounts => {
             });
         });
 
+        describe("Remove Product Function", () => {
+            before(async () => { productContract = await createProduct(); });
+
+            it('should not allow a empty address', () => 
+                web3.eth.expectedExceptionPromise(() => 
+                    orderContract.removeProduct(null, productStock, { from: user }), gasToUse)
+            );
+
+            it('should remove a product', async () => {
+                await orderContract.addProduct(productContract.address, productQuantity, { from: user });
+
+                let txObject = await orderContract.removeProduct(productContract.address, zeroBigNumber, { from: user });
+
+                let productCount = await orderContract.getProductCount();
+
+                assertLogRemoveProduct(txObject, user, productContract.address, zeroBigNumber);
+
+                assert.deepEqual(productCount, zeroBigNumber, "product count did not match expected value");                
+            });
+
+            it('should decrease an existing product quantity', async () => {
+                productContract = await createProduct(10);
+                
+                await orderContract.addProduct(productContract.address, 5, { from: user });
+                let txObject = await orderContract.removeProduct(productContract.address, oneBigNumber, { from: user });
+
+                let productStruct = await orderContract.productsStruct(productContract.address);
+
+                assert.deepEqual(productStruct[6], new web3.BigNumber(4), "quantity did not decrease");
+            });
+
+            it('should remove multiple products and leave the remaining ones', async () => {
+                let addProductCount = new web3.BigNumber(5);
+
+                productContracts = await createProducts(shopContract, merchant, addProductCount.toNumber());
+
+                let index = 0;
+                let totalProductCount = addProductCount;
+
+                // Add items
+                for (let index = 0; index < addProductCount.toNumber(); index++) {
+                    productContract = productContracts[index];
+
+                    await orderContract.addProduct(productContract.address, oneBigNumber, { from: user });
+                }
+
+                // Remove 2 products
+                for (; index < 2; index++) {
+                    productContract = productContracts[index];
+
+                    let txObject = await orderContract.removeProduct(productContract.address, zeroBigNumber, { from: user });
+
+                    totalProductCount = totalProductCount.minus(1);
+
+                    let productCount = await orderContract.getProductCount();
+
+                    assertLogRemoveProduct(txObject, user, productContract.address, zeroBigNumber);
+
+                    assert.deepEqual(productCount, totalProductCount, "product count did not match expected value");
+                }
+
+                // check the remaining items
+                for (; index < expectedProductCount.toNumber(); index++) {
+                    productContract = productContracts[index];
+
+                    let contractProductName = await productContract.name();
+                    let contractProductSku = await productContract.sku();
+                    let contractProductCategory = await productContract.category();
+                    let contractProductPrice = await productContract.price();
+                    let contractProductImage = await productContract.image();
+
+                    let txObject = await orderContract.addProduct(productContract.address, oneBigNumber, { from: user });
+
+                    let productStruct = await orderContract.productsStruct(productContract.address);
+                    let productIndex = productStruct[2];
+
+                    let productIndexVal = await orderContract.productIndex(productIndex);
+
+                    assertLogAddProduct(txObject, user, productContract.address, productQuantity);
+                    
+                    assert.strictEqual(productIndexVal, productContract.address, "product address index did not match expected value");
+
+                    assertProductStruct(productStruct, productContract.address, productIndex, contractProductName, contractProductSku, contractProductCategory, contractProductPrice, oneBigNumber, contractProductImage);
+                }
+
+                let productCount = await orderContract.getProductCount();
+
+                assert.deepEqual(productCount, addProductCount.minus(3), "product count did not match expected value");
+            });
+
+            
+        });
+
     });
 });
 
@@ -201,8 +294,30 @@ function assertLogAddProduct(txObject, who, product, quantity) {
         txObject.logs[0].args.quantity,
         quantity,
         "should be quantity");
-
     
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[2], product);
+}
+
+function assertLogRemoveProduct(txObject, who, product, quantity) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogRemoveProduct", "should have received LogRemoveProduct event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.strictEqual(
+        txObject.logs[0].args.product,
+        product,
+        "should be product");
+    assert.deepEqual(
+        txObject.logs[0].args.quantity,
+        quantity,
+        "should be quantity");
+
     assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
 
     assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
