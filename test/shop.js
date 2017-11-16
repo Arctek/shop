@@ -136,6 +136,58 @@ contract('Shop', accounts => {
                 });
             }
         });
+
+        describe("Add Product Function", () => {
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.addProduct(productName, productSku, productCategory, productPrice, productStock, productImage, { from: bob }), gasToUse)
+            );
+
+            it('should not allow a blank name', () => 
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.addProduct("", productSku, productCategory, productPrice, productStock, productImage, { from: merchant }), gasToUse)
+            );
+
+            it('should not allow a blank sku', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.addProduct(productName, "", productCategory, productPrice, productStock, productImage, { from: merchant }), gasToUse)
+            );
+
+            it('should not allow a blank category', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.addProduct(productName, productSku, "", productPrice, productStock, productImage, { from: merchant }), gasToUse)
+            );
+
+            for (const who in addressList) {
+                it('should add a product for ' + who, async() => {
+                    let address = addressList[who];
+                
+                    let txObject = await contract.addProduct(productName, productSku, productCategory, productPrice, productStock, productImage, { from: address });
+
+                    let productIndexVal = await contract.productIndex(0);
+                    let productCount = await contract.getProductCount();
+                    let productStruct = await contract.productsStruct(productIndexVal);
+
+                    let productContract = Product.at(productIndexVal);
+
+                    assertLogAddProduct(txObject, address, productIndexVal, productName, productSku, productCategory, productPrice, productStock, productImage);
+                    
+                    let contractProductName = await productContract.name();
+                    let contractProductSku = await productContract.sku();
+                    let contractProductCategory = await productContract.category();
+                    let contractProductPrice = await productContract.price();
+                    let contractProductStock = await productContract.stock();
+                    let contractProductImage = await productContract.image();
+
+                    assert.strictEqual(contractProductName, web3.toHexPacked(productName, 66), "name does not match expected value");
+                    assert.strictEqual(contractProductSku, web3.toHexPacked(productSku, 66), "sku does not match expected value");
+                    assert.strictEqual(contractProductCategory, web3.toHexPacked(productCategory, 66), "category does not match expected value");
+                    assert.deepEqual(contractProductPrice, productPrice, "price does not match expected value");
+                    assert.deepEqual(contractProductStock, productStock, "stock does not match expected value");
+                    assert.strictEqual(contractProductImage, web3.toHexPacked(productImage, 66), "image does not match expected value");
+                });
+            }
+        });
     });
 });
 
@@ -160,4 +212,41 @@ function assertLogSetShopName(txObject, who, name) {
 
     assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
     assert.include(web3.toAscii(txObject.receipt.logs[0].topics[2]), name, "should be the name");
+}
+
+function assertLogAddProduct(txObject, who, product, name, sku, category, price, stock, image) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogAddProduct", "should have received LogAddProduct event");
+                
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.strictEqual(
+        txObject.logs[0].args.product,
+        product,
+        "should be product address");
+    assert.include(
+        txObject.logs[0].args.name,
+        web3.toHexPacked(name, 66),
+        "should be the name");
+    assert.include(
+        txObject.logs[0].args.sku,
+        web3.toHexPacked(sku, 66),
+        "should be the sku");
+    assert.include(
+        txObject.logs[0].args.category,
+        web3.toHexPacked(category, 66),
+        "should be the category");
+
+    assert.include(
+        txObject.logs[0].args.image,
+        web3.toHexPacked(image, 66),
+        "should be the image");
+    
+    assert.strictEqual(txObject.receipt.logs[0].topics.length, 4, "should have 4 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
+    assert.topicContainsAddress(txObject.receipt.logs[0].topics[2], product);
+    assert.include(web3.toAscii(txObject.receipt.logs[0].topics[3]), name, "should be the name");
 }
