@@ -218,7 +218,7 @@ contract('Order', accounts => {
                 }
 
                 // check the remaining items
-                for (; index < expectedProductCount.toNumber(); index++) {
+                for (; index < addProductCount.toNumber(); index++) {
                     productContract = productContracts[index];
 
                     let contractProductName = await productContract.name();
@@ -227,14 +227,10 @@ contract('Order', accounts => {
                     let contractProductPrice = await productContract.price();
                     let contractProductImage = await productContract.image();
 
-                    let txObject = await orderContract.addProduct(productContract.address, oneBigNumber, { from: user });
-
                     let productStruct = await orderContract.productsStruct(productContract.address);
-                    let productIndex = productStruct[2];
+                    let productIndex = productStruct[1];
 
                     let productIndexVal = await orderContract.productIndex(productIndex);
-
-                    assertLogAddProduct(txObject, user, productContract.address, productQuantity);
                     
                     assert.strictEqual(productIndexVal, productContract.address, "product address index did not match expected value");
 
@@ -243,7 +239,7 @@ contract('Order', accounts => {
 
                 let productCount = await orderContract.getProductCount();
 
-                assert.deepEqual(productCount, addProductCount.minus(3), "product count did not match expected value");
+                assert.deepEqual(productCount, addProductCount.minus(2), "product count did not match expected value");
             });
 
             
