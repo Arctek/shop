@@ -17,6 +17,7 @@ web3.eth.calculateGasCost = require("../test_util/calculateGasCost.js");
 web3.toHexPacked = require("../test_util/toHexPacked.js");
 assert.topicContainsAddress = require("../test_util/topicContainsAddress.js");
 assert.disallowPausedKilledActions = require("../test_util/disallowPausedKilledActions.js")(web3);
+assert.logSetMerchant = require("../test_util/assertLogSetMerchant.js");
 
 contract('Product', accounts => {
     const gasToUse = 3000000;
@@ -167,7 +168,7 @@ contract('Product', accounts => {
                 it('should set the merchant for ' + who, async () => {
                     let txObject = await contract.setMerchant(bob, { from: addressList[who] });
 
-                    assertLogSetMerchant(txObject, addressList[who], bob);
+                    assert.logSetMerchant(txObject, addressList[who], bob);
                     
                     let contractMerchant = await contract.merchant();
 
@@ -396,25 +397,6 @@ function assertLogUpdate(txObject, who, name, sku, category, price, stock, image
     assert.include(web3.toAscii(txObject.receipt.logs[0].topics[3]), sku, "should be the sku");
 }
 
-function assertLogSetMerchant(txObject, who, merchant) {
-    assert.equal(txObject.logs.length, 1, "should have received 1 event");
-    assert.strictEqual(txObject.logs[0].event, "LogSetMerchant", "should have received LogSetMerchant event");
-                
-    assert.strictEqual(
-        txObject.logs[0].args.who,
-        who,
-        "should be who");
-    assert.strictEqual(
-        txObject.logs[0].args.merchant,
-        merchant,
-        "should be merchant");
-    
-    assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
-
-    assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
-    assert.topicContainsAddress(txObject.receipt.logs[0].topics[2], merchant);
-}
-
 function assertLogSetName(txObject, who, name) {
     assert.equal(txObject.logs.length, 1, "should have received 1 event");
     assert.strictEqual(txObject.logs[0].event, "LogSetName", "should have received LogSetName event");
@@ -426,7 +408,7 @@ function assertLogSetName(txObject, who, name) {
     assert.strictEqual(
         txObject.logs[0].args.name,
         web3.toHexPacked(name, 66),
-        "should be merchant");
+        "should be name");
     
     assert.strictEqual(txObject.receipt.logs[0].topics.length, 3, "should have 3 topics");
 
