@@ -2,6 +2,8 @@
 
 const Shop = artifacts.require("./Shop.sol");
 const Product = artifacts.require("./Product.sol");
+const Order = artifacts.require("./Order.sol");
+const UnsafeOrder = artifacts.require("./UnsafeOrder.sol");
 
 import { default as Promise } from 'bluebird';
 
@@ -34,23 +36,29 @@ contract('Shop', accounts => {
     const productStock = new web3.BigNumber((Math.floor(Math.random() * 30) + 1));
     const productImage = "https://image2";
 
-    let owner, merchant, bob, productContracts;
+    let owner, merchant, bob, user, productContracts, orderContract, unsafeOrderContract;
+
+    const zeroBigNumber = new web3.BigNumber(0);
+    const oneBigNumber = new web3.BigNumber(1);
 
     // have to set this here, otherwise loops outside of it() wont work
     const addressList = { "owner": accounts[0], "merchant": accounts[1] };
 
     before("should prepare accounts", function() {
-        assert.isAtLeast(accounts.length, 3, "should have at least 3 accounts");
+        assert.isAtLeast(accounts.length, 4, "should have at least 4 accounts");
         owner = accounts[0];
         merchant = accounts[1];
         bob = accounts[2];
+        user = accounts[3];
 
-        return web3.eth.makeSureAreUnlocked([owner, merchant, bob])
-            .then(() => web3.eth.makeSureHasAtLeast(owner, [merchant, bob], web3.toWei(2)))
+        return web3.eth.makeSureAreUnlocked([owner, merchant, bob, user])
+            .then(() => web3.eth.makeSureHasAtLeast(owner, [merchant, bob, user], web3.toWei(2)))
             .then(txObject => web3.eth.getTransactionReceiptMined(txObject))
-            .then(() => web3.eth.makeSureHasAtLeast(merchant, [owner, bob], web3.toWei(2)))
+            .then(() => web3.eth.makeSureHasAtLeast(merchant, [owner, bob, user], web3.toWei(2)))
             .then(txObject => web3.eth.getTransactionReceiptMined(txObject))
-            .then(() => web3.eth.makeSureHasAtLeast(bob, [owner, merchant], web3.toWei(1)))
+            .then(() => web3.eth.makeSureHasAtLeast(bob, [owner, merchant, user], web3.toWei(1)))
+            .then(txObject => web3.eth.getTransactionReceiptMined(txObject))
+            .then(() => web3.eth.makeSureHasAtLeast(user, [owner, merchant, bob], web3.toWei(1)))
             .then(txObject => web3.eth.getTransactionReceiptMined(txObject));
     });
 
@@ -80,7 +88,7 @@ contract('Shop', accounts => {
     describe("Contract Functions", () => {
         beforeEach(() => Shop.new(merchant, shopName, { from: owner }).then(instance => contract = instance));
 
-        describe("Set Shop Name Function", () => {
+        /*describe("Set Shop Name Function", () => {
             it('should not allow non-owner or non-merchant', () => 
                 web3.eth.expectedExceptionPromise(() => 
                     contract.setShopName(updatedShopName, { from: bob }), gasToUse)
@@ -224,10 +232,99 @@ contract('Shop', accounts => {
                     assert.deepEqual(productCount, new web3.BigNumber(2), "product count does not match expected value");
                 });
             }
-        });
+        });*/
 
         describe("Submit Order Function", () => {
-            //kill, paused, status, total, quantity, 
+            beforeEach(async () => { productContracts = await createProducts(Product, contract, merchant, 3); });
+            beforeEach(() => Order.new(contract.address, { from: user }).then(instance => orderContract = instance));
+            beforeEach(async () => {
+                for (let i = 0; i < productContracts.length; i++) {
+                    await orderContract.addProduct(productContracts[i].address, 1, { from: user });
+                }
+            });
+
+            beforeEach(() => UnsafeOrder.new(contract.address, { from: user }).then(instance => unsafeOrderContract = instance));
+            beforeEach(async () => {
+                for (let i = 0; i < productContracts.length; i++) {
+                    await unsafeOrderContract.addProduct(productContracts[i].address, 1, { from: user });
+                }
+            });
+
+            it('should not allow a killed order', async () => {
+                await orderContract.setPaused(true, { from: user });
+                await orderContract.kill({ from: user });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(orderContract.address, { from: user }), gasToUse);
+            });
+
+            it('should not allow a paused order', async () => {
+                await orderContract.setPaused(true, { from: user });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(orderContract.address, { from: user }), gasToUse);
+            });
+
+            it('should not allow a non-created order status', async () => {
+                await unsafeOrderContract.setStatus(0, { from: user });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(unsafeOrderContract.address, { from: user }), gasToUse);
+            });
+
+            it('should not allow a zero order total', async () => {
+                await unsafeOrderContract.setTotal(0, { from: user });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(unsafeOrderContract.address, { from: user }), gasToUse);
+            }); 
+
+            it('should not allow a value that does not match order total', () => 
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(orderContract.address, { from: user, value: 1 }), gasToUse)
+            );
+
+            it('should not allow an order total that does not match the calculated product total', async () => {
+                await unsafeOrderContract.setTotal(1, { from: user });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(unsafeOrderContract.address, { from: user, value: 1 }), gasToUse);
+            });
+
+            it('should not allow an order with product quantity stock mismatch', async () => {
+                let productContract = productContracts[0];
+
+                await productContract.setStock(0, { from: merchant });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(orderContract.address, { from: user, value: 1 }), gasToUse);
+            });
+
+            it('should allow an order submission', async () => {
+                let orderTotal = await orderContract.total();
+
+                let txObject = await contract.submitOrder(orderContract.address, { from: user, value: orderTotal });
+
+                let orderIndexVal = await contract.orderIndex(0);
+                let orderCount = await contract.getOrderCount();
+                let orderStruct = await contract.ordersStruct(orderIndexVal);
+
+                let orderStatus = await orderContract.status();
+
+                assertLogSubmitOrder(txObject, user, orderContract.address, orderTotal);
+
+                assert.deepEqual(orderCount, oneBigNumber, "order count does not match expected value");
+                assert.strictEqual(orderStatus, 1, "order status does not match expected value");
+            });
+
+            it('should not allow an order to be submitted twice', async () => {
+                let orderTotal = await orderContract.total();
+                
+                await contract.submitOrder(orderContract.address, { from: user, value: orderTotal });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.submitOrder(orderContract.address, { from: user, value: orderTotal }), gasToUse);
+            });
         });
     });
 });
@@ -329,4 +426,28 @@ function assertLogRemoveProduct(txObject, who, product, name, sku, category) {
     assert.topicContainsAddress(txObject.receipt.logs[1].topics[1], who);
     assert.topicContainsAddress(txObject.receipt.logs[1].topics[2], product);
     assert.strictEqual(txObject.receipt.logs[1].topics[3], name, "should be the name");
+}
+
+function assertLogSubmitOrder(txObject, who, order, total) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogSubmitOrder", "should have received LogSubmitOrder event");
+    
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.strictEqual(
+        txObject.logs[0].args.order,
+        order,
+        "should be order address");
+    assert.deepEqual(
+        txObject.logs[0].args.total,
+        total,
+        "should be the total");
+
+    assert.strictEqual(txObject.receipt.logs[1].topics.length, 4, "should have 4 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[1].topics[1], who);
+    assert.topicContainsAddress(txObject.receipt.logs[1].topics[2], order);
+    assert.deepEqual(web3.toBigNumber(txObject.receipt.logs[0].topics[3]), total, "should be the total");
 }

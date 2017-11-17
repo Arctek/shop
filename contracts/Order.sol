@@ -36,7 +36,7 @@ contract Order is Killable {
         _;
     }
 
-    function Order(Shop _shop) {
+    function Order(Shop _shop) Ownable() public {
         require(_shop.owner() != address(0));
         shop = _shop;
     }
@@ -73,6 +73,8 @@ contract Order is Killable {
     {
         require(_product != address(0));
         require(_quantity > 0);
+
+        // require product belongs to the shop
 
         Product untrustedProduct = Product(_product);
 
@@ -149,7 +151,7 @@ contract Order is Killable {
     }
 
     function kill() public isCreated returns(bool success) {
-        return super.kill();
+        return Killable.kill();
     }
 
     /*function pay()

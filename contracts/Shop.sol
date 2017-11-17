@@ -29,7 +29,7 @@ contract Shop is Killable {
     event LogSetMerchant(address indexed who, address indexed merchant);
     event LogAddProduct(address indexed who, address indexed product, bytes32 indexed name, bytes32 sku, bytes32 category, uint price, uint stock, bytes32 image);
     event LogRemoveProduct(address indexed who, address indexed product,  bytes32 indexed name, bytes32 sku, bytes32 category);
-    event LogSubmitOrder(address indexed who, address indexed order);
+    event LogSubmitOrder(address indexed who, address indexed order, uint indexed total);
 
     modifier isOwnerOrMerchant() {
         require(msg.sender == owner || msg.sender == merchant);
@@ -41,7 +41,7 @@ contract Shop is Killable {
         _;
     }
 
-    function Shop(address _merchant, bytes32 _name) public {
+    function Shop(address _merchant, bytes32 _name) Ownable() public {
         require(_merchant != address(0));
         require(_name != "");
         merchant = _merchant;
@@ -54,6 +54,14 @@ contract Shop is Killable {
         returns(uint productCount)
     {
         return productIndex.length;
+    }
+
+    function getOrderCount()
+        public
+        constant
+        returns(uint orderCount)
+    {
+        return orderIndex.length;
     }
 
     function setShopName(bytes32 _name)
@@ -194,12 +202,12 @@ contract Shop is Killable {
             uint productTotal = productPrice * productQuantity;
 
             require(productTotal > 0);
-            require(productTotal > productPrice);
+            require(productTotal >= productPrice);
             require(orderTotal + productTotal > orderTotal);
 
             require(untrustedProduct.setStock(remainingStock));
 
-            orderTotal += productPrice;            
+            orderTotal += productTotal;            
         }
 
         require(orderTotal == msg.value);
@@ -209,7 +217,7 @@ contract Shop is Killable {
         ordersStruct[untrustedOrder].order = untrustedOrder;
         ordersStruct[untrustedOrder].index = orderIndex.length;
 
-        LogSubmitOrder(msg.sender, _order);
+        LogSubmitOrder(msg.sender, _order, orderTotal);
 
         return true;
     }
