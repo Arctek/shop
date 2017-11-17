@@ -19,6 +19,7 @@ web3.toHexPacked = require("../test_util/toHexPacked.js");
 assert.topicContainsAddress = require("../test_util/topicContainsAddress.js");
 assert.disallowPausedKilledActions = require("../test_util/disallowPausedKilledActions.js")(web3);
 assert.logSetMerchant = require("../test_util/assertLogSetMerchant.js");
+let createProducts = require("../test_util/createProducts.js");
 
 contract('Shop', accounts => {
     const gasToUse = 3000000;
@@ -33,7 +34,7 @@ contract('Shop', accounts => {
     const productStock = new web3.BigNumber((Math.floor(Math.random() * 30) + 1));
     const productImage = "https://image2";
 
-    let owner, merchant, bob;
+    let owner, merchant, bob, productContracts;
 
     // have to set this here, otherwise loops outside of it() wont work
     const addressList = { "owner": accounts[0], "merchant": accounts[1] };
@@ -188,6 +189,46 @@ contract('Shop', accounts => {
                 });
             }
         });
+
+        describe("Remove Product Function", () => {
+            beforeEach(async () => { productContracts = await createProducts(Product, contract, merchant, 3); });
+
+            it('should not allow non-owner or non-merchant', () =>
+                web3.eth.expectedExceptionPromise(() => 
+                    contract.removeProduct(productContracts[0].address, { from: bob }), gasToUse)
+            );
+
+            it('should not allow a non-added product', async () => {
+                let productContract = await Product.new(merchant, productName, productSku, productCategory, productPrice, productStock, productImage, { from: owner });
+
+                return web3.eth.expectedExceptionPromise(() => 
+                    contract.removeProduct(productContract.address, { from: merchant }), gasToUse);
+            });
+
+            for (const who in addressList) {
+                it('should remove a product for ' + who, async () => {
+                    let address = addressList[who];
+                    let productContract = productContracts[0];
+
+                    let contractAddress = productContract.address;
+                    let contractProductName = await productContract.name();
+                    let contractProductSku = await productContract.sku();
+                    let contractProductCategory = await productContract.category();
+
+                    let txObject = await contract.removeProduct(contractAddress, { from: address });
+
+                    let productCount = await contract.getProductCount();
+
+                    assertLogRemoveProduct(txObject, address, contractAddress, contractProductName, contractProductSku, contractProductCategory);
+
+                    assert.deepEqual(productCount, new web3.BigNumber(2), "product count does not match expected value");
+                });
+            }
+        });
+
+        describe("Submit Order Function", () => {
+            //kill, paused, status, total, quantity, 
+        });
     });
 });
 
@@ -238,15 +279,54 @@ function assertLogAddProduct(txObject, who, product, name, sku, category, price,
         txObject.logs[0].args.category,
         web3.toHexPacked(category, 66),
         "should be the category");
-
+    assert.deepEqual(
+        txObject.logs[0].args.price,
+        price,
+        "should be the price");
+    assert.deepEqual(
+        txObject.logs[0].args.stock,
+        stock,
+        "should be the stock");
     assert.include(
         txObject.logs[0].args.image,
         web3.toHexPacked(image, 66),
         "should be the image");
-    
+
     assert.strictEqual(txObject.receipt.logs[0].topics.length, 4, "should have 4 topics");
 
     assert.topicContainsAddress(txObject.receipt.logs[0].topics[1], who);
     assert.topicContainsAddress(txObject.receipt.logs[0].topics[2], product);
     assert.include(web3.toAscii(txObject.receipt.logs[0].topics[3]), name, "should be the name");
+}
+
+function assertLogRemoveProduct(txObject, who, product, name, sku, category) {
+    assert.equal(txObject.logs.length, 1, "should have received 1 event");
+    assert.strictEqual(txObject.logs[0].event, "LogRemoveProduct", "should have received LogRemoveProduct event");
+    
+    assert.strictEqual(
+        txObject.logs[0].args.who,
+        who,
+        "should be who");
+    assert.strictEqual(
+        txObject.logs[0].args.product,
+        product,
+        "should be product address");
+    assert.strictEqual(
+        txObject.logs[0].args.name,
+        name,
+        "should be the name");
+    assert.strictEqual(
+        txObject.logs[0].args.sku,
+        sku,
+        "should be the sku");
+    assert.strictEqual(
+        txObject.logs[0].args.category,
+        category,
+        "should be the category");
+
+    assert.strictEqual(txObject.receipt.logs[1].topics.length, 4, "should have 4 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[1].topics[1], who);
+    assert.topicContainsAddress(txObject.receipt.logs[1].topics[2], product);
+    assert.strictEqual(txObject.receipt.logs[1].topics[3], name, "should be the name");
 }

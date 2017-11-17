@@ -19,6 +19,7 @@ web3.eth.calculateGasCost = require("../test_util/calculateGasCost.js");
 web3.toHexPacked = require("../test_util/toHexPacked.js");
 assert.topicContainsAddress = require("../test_util/topicContainsAddress.js");
 assert.disallowPausedKilledActions = require("../test_util/disallowPausedKilledActions.js")(web3);
+let createProducts = require("../test_util/createProducts.js");
 
 contract('Order', accounts => {
     const gasToUse = 3000000;
@@ -116,7 +117,7 @@ contract('Order', accounts => {
             it('should add multiple products', async () => {
                 let expectedProductCount = new web3.BigNumber(3);
 
-                productContracts = await createProducts(shopContract, merchant, expectedProductCount.toNumber());
+                productContracts = await createProducts(Product, shopContract, merchant, expectedProductCount.toNumber());
 
                 for (let index = 0; index < expectedProductCount.toNumber(); index++) {
                     productContract = productContracts[index];
@@ -190,7 +191,7 @@ contract('Order', accounts => {
             it('should remove multiple products and leave the remaining ones', async () => {
                 let addProductCount = new web3.BigNumber(5);
 
-                productContracts = await createProducts(shopContract, merchant, addProductCount.toNumber());
+                productContracts = await createProducts(Product, shopContract, merchant, addProductCount.toNumber());
 
                 let index = 0;
                 let totalProductCount = addProductCount;
@@ -240,35 +241,10 @@ contract('Order', accounts => {
                 let productCount = await orderContract.getProductCount();
 
                 assert.deepEqual(productCount, addProductCount.minus(2), "product count did not match expected value");
-            });
-
-            
+            }); 
         });
-
     });
 });
-
-async function createProducts(shopContract, merchant, count) {
-    let productCount = count > 0 ? count : Math.floor(Math.random() * 9) + 1;
-
-    let productsContracts = [];
-
-    for(let i = 0; i < productCount; i++) {
-        // some random product data
-        let productName = Math.random().toString(36).slice(2);;
-        let productSku = Math.random().toString(36).slice(2);;
-        let productCategory = Math.random().toString(36).slice(2);;
-        let productPrice = new web3.BigNumber((Math.floor(Math.random() * 100000) + 1) * 2);
-        let productStock = new web3.BigNumber((Math.floor(Math.random() * 30) + 1));
-        let productImage = "https://" + Math.random().toString(36).slice(2);
-
-        let txObject = await shopContract.addProduct(productName, productSku, productCategory, productPrice, productStock, productImage, { from: merchant })
-
-        productsContracts.push(Product.at(txObject.logs[0].args.product));
-    }
-
-    return productsContracts;
-}
 
 function assertNotFail(error)  {
     assert.notEqual(error.message, 'assert.fail()', 'should have thrown');
