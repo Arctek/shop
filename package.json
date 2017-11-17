@@ -6,9 +6,18 @@
   "directories": {
     "test": "test"
   },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "test": "truffle test",
-    "lintsol": "./node_modules/.bin/solium --dir ./contracts/"
+    "lintsol": "./node_modules/.bin/solium --dir ./contracts/",
+    "build": "stencil build --prerender",
+    "dev": "sd concurrent \"stencil build --dev --watch\" \"stencil-dev-server\" ",
+    "serve": "stencil-dev-server",
+    "start": "npm run dev",
+    "test": "jest --no-cache",
+    "test.watch": "jest --watch --no-cache"
   },
   "author": "Joshua Richardson (Arctek)",
   "license": "MIT",
@@ -26,5 +35,18 @@
   "devDependencies": {
     "eth-gas-reporter": "0.0.12",
     "webpack": "^3.8.1"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(ts|tsx)$": "<rootDir>/node_modules/@stencil/core/testing/jest.preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(tsx?|jsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json",
+      "jsx"
+    ]
   }
 }
