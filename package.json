@@ -13,6 +13,7 @@
   "author": "Joshua Richardson (Arctek)",
   "license": "MIT",
   "dependencies": {
+    "@stencil/core": "0.0.7",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-register": "^6.26.0",

@@ -1,0 +1,13 @@
+{
+  "name": "B9 Shop Front",
+  "short_name": "ShopFront",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": [{
+    "src": "assets/icon/icon.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }],
+  "background_color": "#DE7150",
+  "theme_color": "#DE7150"
+}
