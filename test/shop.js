@@ -88,7 +88,7 @@ contract('Shop', accounts => {
     describe("Contract Functions", () => {
         beforeEach(() => Shop.new(merchant, shopName, { from: owner }).then(instance => contract = instance));
 
-        /*describe("Set Shop Name Function", () => {
+        describe("Set Shop Name Function", () => {
             it('should not allow non-owner or non-merchant', () => 
                 web3.eth.expectedExceptionPromise(() => 
                     contract.setShopName(updatedShopName, { from: bob }), gasToUse)
@@ -232,7 +232,7 @@ contract('Shop', accounts => {
                     assert.deepEqual(productCount, new web3.BigNumber(2), "product count does not match expected value");
                 });
             }
-        });*/
+        });
 
         describe("Submit Order Function", () => {
             beforeEach(async () => { productContracts = await createProducts(Product, contract, merchant, 3); });
@@ -314,12 +314,12 @@ contract('Shop', accounts => {
                 assertLogSubmitOrder(txObject, user, orderContract.address, orderTotal);
 
                 assert.deepEqual(orderCount, oneBigNumber, "order count does not match expected value");
-                assert.strictEqual(orderStatus, 1, "order status does not match expected value");
+                assert.deepEqual(orderStatus, oneBigNumber, "order status does not match expected value");
             });
 
             it('should not allow an order to be submitted twice', async () => {
                 let orderTotal = await orderContract.total();
-                
+
                 await contract.submitOrder(orderContract.address, { from: user, value: orderTotal });
 
                 return web3.eth.expectedExceptionPromise(() => 
@@ -445,9 +445,11 @@ function assertLogSubmitOrder(txObject, who, order, total) {
         total,
         "should be the total");
 
-    assert.strictEqual(txObject.receipt.logs[1].topics.length, 4, "should have 4 topics");
+    let lastLog = txObject.receipt.logs.length - 1;
 
-    assert.topicContainsAddress(txObject.receipt.logs[1].topics[1], who);
-    assert.topicContainsAddress(txObject.receipt.logs[1].topics[2], order);
-    assert.deepEqual(web3.toBigNumber(txObject.receipt.logs[0].topics[3]), total, "should be the total");
+    assert.strictEqual(txObject.receipt.logs[lastLog].topics.length, 4, "should have 4 topics");
+
+    assert.topicContainsAddress(txObject.receipt.logs[lastLog].topics[1], who);
+    assert.topicContainsAddress(txObject.receipt.logs[lastLog].topics[2], order);
+    assert.deepEqual(web3.toBigNumber(txObject.receipt.logs[lastLog].topics[3]), total, "should be the total");
 }

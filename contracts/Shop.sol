@@ -145,19 +145,7 @@ contract Shop is Killable {
         LogRemoveProduct(msg.sender, _product, productName, productSku, productCategory);
 
         return true;
-        // Hmm removing this here will be a problem if it exists on any orders; but we should write product details when an order is submitted
     }
-
-    /*function processPayment(address _order)
-        public
-        payable
-        returns(bool success)
-    {
-        require(ordersStruct[_order].order != address(0));
-        require(balance + msg.value > balance);
-
-        return true;
-    }*/
 
     function submitOrder(address _order)
         public
@@ -183,8 +171,6 @@ contract Shop is Killable {
         require(productCount < 10);
 
         uint orderTotal = 0;
-
-        //Product[] memory orderProducts;
 
         // accounting, in case we have been duped
         for (uint8 i = 0; i < productCount; i++) {
