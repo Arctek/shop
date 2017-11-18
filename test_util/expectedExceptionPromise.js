@@ -9,6 +9,7 @@
 module.exports = function expectedExceptionPromise(actionPromise, gasToUse, timeOut) {
     const self = this;
     timeOut = timeOut ? timeOut : 5000;
+
     return actionPromise()
         .then(function(txObject) {
             if (typeof txObject === "string") {
@@ -31,10 +32,12 @@ module.exports = function expectedExceptionPromise(actionPromise, gasToUse, time
             }
         })
         .catch(function(e) {
+            
             if (e.message.indexOf("invalid opcode") > -1 ||
                 e.message.indexOf("invalid JUMP") > -1 ||
-                e.message.indexOf("out of gas") > -1) {
-                // We are in TestRPC
+                e.message.indexOf("out of gas") > -1 ||
+                e.message.indexOf("VM Exception") > -1) {
+                // We are in TestRPC / Ganache
             } else if (e.message.indexOf("please check your gas amount") > -1) {
                 // We are in Geth for a deployment
             } else {
