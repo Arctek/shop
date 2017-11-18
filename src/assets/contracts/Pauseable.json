@@ -1,0 +1,105 @@
+{
+  "contract_name": "Pauseable",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "setOwner",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newPaused",
+          "type": "bool"
+        }
+      ],
+      "name": "setPaused",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "who",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "paused",
+          "type": "bool"
+        }
+      ],
+      "name": "LogSetPaused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "oldOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "LogSetOwner",
+      "type": "event"
+    }
+  ],
+  "unlinked_binary": "0x60606040525b60008054600160a060020a03191633600160a060020a03161790555b5b6102f3806100316000396000f300606060405263ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166313af4035811461005e57806316c38b3c146100915780635c975abb146100bd5780638da5cb5b146100e4575b600080fd5b341561006957600080fd5b61007d600160a060020a0360043516610113565b604051901515815260200160405180910390f35b341561009c57600080fd5b61007d60043515156101cd565b604051901515815260200160405180910390f35b34156100c857600080fd5b61007d610297565b604051901515815260200160405180910390f35b34156100ef57600080fd5b6100f76102b8565b604051600160a060020a03909116815260200160405180910390f35b6000805433600160a060020a0390811691161461012f57600080fd5b600160a060020a038216151561014457600080fd5b600054600160a060020a038381169116141561015f57600080fd5b600054600160a060020a0380841691167fc66d1d23a5b7baf1f496bb19f580d7b12070ad5a08a758c990db97d961fa33a660405160405180910390a3506000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03831617905560015b5b919050565b6000805433600160a060020a039081169116146101e957600080fd5b60005474010000000000000000000000000000000000000000900460ff161515821515141561021757600080fd5b6000805474ff0000000000000000000000000000000000000000191674010000000000000000000000000000000000000000841515908102919091179182905590600160a060020a03167f271ac239d392431f17dea7ef0a13e9a6784ca02b0ce5d00a400c0490f17fecd760405160405180910390a35060015b5b919050565b60005474010000000000000000000000000000000000000000900460ff1681565b600054600160a060020a0316815600a165627a7a7230582028156453b8260febe4ab42378b4db93de5d340d8ce3594c533a8cea4fd9426260029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1511003707474
+}

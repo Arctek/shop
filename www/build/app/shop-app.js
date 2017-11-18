@@ -5585,8 +5585,11 @@ var ShopApp = /** @class */ (function () {
     }
     ShopApp.prototype.componentDidLoad = function () {
         var _this = this;
+        fetch('/assets/contracts/ShopFactory.json').then(function (resp) { return resp.json(); }).then(function (ABI) {  });
+        fetch('/assets/contracts/Shop.json').then(function (resp) { return resp.json(); }).then(function (ABI) {  });
+        fetch('/assets/contracts/Product.json').then(function (resp) { return resp.json(); }).then(function (ABI) {  });
+        fetch('/assets/contracts/Order.json').then(function (resp) { return resp.json(); }).then(function (ABI) {  });
         var self = this;
-        console.log("Load");
         var getWeb3 = new bluebird_1(function (resolve, reject) {
             // Wait for loading completion to avoid race conditions with web3 injection timing.
             //window.addEventListener('load', function() {
@@ -5628,7 +5631,7 @@ var ShopApp = /** @class */ (function () {
             self.web3 = web3;
             _this.web3.eth.getAccountsPromise(function (err, accounts) {
                 self.accounts = accounts;
-                console.log(accounts);
+                self.account = accounts[0];
                 _this.isLoading = false;
             })
                 .catch(function (err) {
@@ -5638,8 +5641,9 @@ var ShopApp = /** @class */ (function () {
             // Instantiate contract once web3 provided.
             //this.instantiateContract()
         })
-            .catch(function () {
-            console.log('Error finding web3.');
+            .catch(function (err) {
+            console.log('Error finding web3:');
+            console.log(err);
             _this.isLoading = false;
         });
     };
@@ -5647,7 +5651,7 @@ var ShopApp = /** @class */ (function () {
         this.account = event.detail.account;
     };
     ShopApp.prototype.createShopHandler = function (event) {
-        alert(event.detail.shopName);
+        this.isLoading = true;
     };
     ShopApp.prototype.render = function () {
         return (h("div", null,

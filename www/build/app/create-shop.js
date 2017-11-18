@@ -1,6 +1,6 @@
 /*! Built with http://stenciljs.com */
 
-App.loadStyles("create-shop","create-shop {\n  font-family: Arial, Helvetica, sans serif, serif;\n  display: inline-block;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n}\n\n.title {\n  transition: background-color 180ms;\n  padding: 3rem;\n  font-size: 2rem;\n}\n\n.title:hover {\n  background: #ddd;\n  cursor: pointer;\n}\n\nform {\n  padding: 2rem;\n  font-size: 1.1rem;\n}\n\n.block {\n  display: block;\n  margin-top: 1.1rem;\n}\ncreate-shop.hydrated{visibility:inherit}");
+App.loadStyles("create-shop","create-shop {\n  font-family: Arial, Helvetica, sans serif, serif;\n  display: inline-block;\n  border: 1px solid #ddd;\n  border-radius: 6px;\n  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);\n  overflow: hidden;\n}\n\n.title {\n  transition: background-color 180ms;\n  padding: 3rem;\n  font-size: 2rem;\n}\n\n.title:hover {\n  background: #85cadb;\n  cursor: pointer;\n}\n\nform {\n  padding: 2rem;\n  font-size: 1.1rem;\n}\n\n.block {\n  display: block;\n  margin-top: 1.1rem;\n}\ncreate-shop.hydrated{visibility:inherit}");
 App.loadComponents(
 
 /**** module id (dev mode) ****/

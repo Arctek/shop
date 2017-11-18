@@ -1,0 +1,68 @@
+{
+  "contractName": "Merchant",
+  "abi": [],
+  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820a9cec120ba7f3a263c3a85e1055d4ef2dd1bd8627e1c88a9f6f65da96f19b8b90029",
+  "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820a9cec120ba7f3a263c3a85e1055d4ef2dd1bd8627e1c88a9f6f65da96f19b8b90029",
+  "sourceMap": "27:22:1:-;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "27:22:1:-;;;;;",
+  "source": "pragma solidity 0.4.18;\r\n\r\ncontract Merchant {\r\n}",
+  "sourcePath": "F:\\DAPPS\\shop\\contracts\\Merchant.sol",
+  "ast": {
+    "attributes": {
+      "absolutePath": "/F/DAPPS/shop/contracts/Merchant.sol",
+      "exportedSymbols": {
+        "Merchant": [
+          93
+        ]
+      }
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            "0.4",
+            ".18"
+          ]
+        },
+        "id": 92,
+        "name": "PragmaDirective",
+        "src": "0:23:1"
+      },
+      {
+        "attributes": {
+          "baseContracts": [
+            null
+          ],
+          "contractDependencies": [
+            null
+          ],
+          "contractKind": "contract",
+          "documentation": null,
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            93
+          ],
+          "name": "Merchant",
+          "nodes": [
+            null
+          ],
+          "scope": 94
+        },
+        "id": 93,
+        "name": "ContractDefinition",
+        "src": "27:22:1"
+      }
+    ],
+    "id": 94,
+    "name": "SourceUnit",
+    "src": "0:49:1"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.18+commit.9cf6e910.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "1.0.1",
+  "updatedAt": "2017-11-18T12:08:49.656Z"
+}

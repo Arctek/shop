@@ -1,9 +1,22 @@
 import { Component, State, Listen } from '@stencil/core';
 import { default as Promise } from 'bluebird';
 
-import SimpleStorageContract from '../build/contracts/SimpleStorage.json'
+let Shop, ShopFactory, Product, Order;
+/*
+let Shop;
 
-declare global {
+fetch('../../package.json')
+.then(resp => resp.json())
+.then((packageJson) => { 
+  console.log(packageJson.version); 
+}); 
+//import Shop from './Shop.json';    
+//import ShopFactory from '../../../build/contracts/ShopFactory.json';
+//import Shop from '../../../build/contracts/Shop.json';
+//import Product from '../../../build/contracts/Product.json';
+//import Order from '../../../build/contracts/Order.json';*/ 
+
+declare global { 
     interface Window { web3: any; }
 }
 
@@ -25,8 +38,13 @@ export class ShopApp {
   @State() isLoading = false;
  
   componentDidLoad() {
+    fetch('/assets/contracts/ShopFactory.json').then(resp => resp.json()).then((ABI) => { ShopFactory = ABI; }); 
+    fetch('/assets/contracts/Shop.json').then(resp => resp.json()).then((ABI) => { Shop = ABI; }); 
+    fetch('/assets/contracts/Product.json').then(resp => resp.json()).then((ABI) => { Product = ABI; }); 
+    fetch('/assets/contracts/Order.json').then(resp => resp.json()).then((ABI) => { Order = ABI; }); 
+
     let self = this;
-    console.log("Load");
+
     let getWeb3 = new Promise(function(resolve, reject) {
       // Wait for loading completion to avoid race conditions with web3 injection timing.
       //window.addEventListener('load', function() {
@@ -82,7 +100,7 @@ export class ShopApp {
 
       this.web3.eth.getAccountsPromise((err, accounts) => {
         self.accounts = accounts;
-        console.log(accounts);
+        self.account = accounts[0];
 
         this.isLoading = false;
       })
@@ -96,8 +114,9 @@ export class ShopApp {
       // Instantiate contract once web3 provided.
       //this.instantiateContract()
     })
-    .catch(() => {
-      console.log('Error finding web3.');
+    .catch((err) => {
+      console.log('Error finding web3:');
+      console.log(err);
       this.isLoading = false;
     });
   }
@@ -109,11 +128,11 @@ export class ShopApp {
 
   @Listen('createShop')
   createShopHandler(event: CustomEvent) {
-    
+    this.isLoading = true;
   }
   
   render() {
-    return (
+    return ( 
       <div>
         <header class="clearfix">
           <div class="width-container">

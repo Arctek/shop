@@ -8,7 +8,9 @@ module.exports = {
       port: 8545,
       network_id: "*" // Match any network id
     }
-  }/*,
+  },
+ // contracts_build_directory: "./src/contracts",
+  /*,
   mocha: {
     reporter: 'eth-gas-reporter'
   }*/

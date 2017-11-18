@@ -1,0 +1,62 @@
+{
+  "contract_name": "Ownable",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "setOwner",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "payable": false,
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "oldOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "LogSetOwner",
+      "type": "event"
+    }
+  ],
+  "unlinked_binary": "0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61019f8061003c6000396000f300606060405263ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166313af403581146100485780638da5cb5b1461007b575b600080fd5b341561005357600080fd5b610067600160a060020a03600435166100aa565b604051901515815260200160405180910390f35b341561008657600080fd5b61008e610164565b604051600160a060020a03909116815260200160405180910390f35b6000805433600160a060020a039081169116146100c657600080fd5b600160a060020a03821615156100db57600080fd5b600054600160a060020a03838116911614156100f657600080fd5b600054600160a060020a0380841691167fc66d1d23a5b7baf1f496bb19f580d7b12070ad5a08a758c990db97d961fa33a660405160405180910390a3506000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03831617905560015b5b919050565b600054600160a060020a0316815600a165627a7a72305820447362c721f1d2c85f891be17ffec9c6c3260997f9fa0b4b9585236989885b1e0029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1511003707473
+}

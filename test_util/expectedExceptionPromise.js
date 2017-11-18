@@ -16,6 +16,7 @@ module.exports = function expectedExceptionPromise(actionPromise, gasToUse, time
             } else if (typeof txObject.receipt === "object") {
                 return txObject.receipt;
             }
+            console.log(txObject);
             throw new Error("Invalid object", txObject);
         })
         .then(function(receipt) {
