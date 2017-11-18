@@ -17,7 +17,9 @@
     "jsxFactory": "h"
   },
   "include": [
-    "src"
+    "./node_modules/web3-typescript-typings/index.d.ts",
+    "src",
+    "src/assets/js"
   ],
   "exclude": [
     "node_modules"

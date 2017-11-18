@@ -1,0 +1,45 @@
+user-accounts {
+  font-family: Courier New, Courier, monospace;
+  font-weight: bold;
+  float: right;
+  position: relative;
+}
+
+.label {
+  cursor: pointer;
+  padding:6px 11px;
+  border:1px solid #fff;
+  border-radius:4px;
+
+  .selected & {
+    color:#DE7150;
+    background:#fff;
+  }
+}
+
+.user-account-menu {
+    display: none;
+
+    .selected & {
+        display: block;
+        position: absolute;
+        top: 100%;
+        border:1px solid #aaa;
+        background:#fff;
+        color:#000;
+        padding:12px;
+        border-radius:4px;
+        box-shadow: 1px 1px rgba(0,0,0,0.2);
+        right: 0;
+        margin-top: 10px;
+        line-height: 2;
+    }
+}
+
+.user-account {
+    cursor: pointer;
+
+    &.selected, &:hover {
+        color: #DE7150;
+    }
+}

@@ -7,22 +7,22 @@
     "test": "test"
   },
   "files": [
-    "dist/"
+    "src/assets/"
   ],
   "scripts": {
-    "test": "truffle test",
+    "test": "jest --no-cache",
     "lintsol": "./node_modules/.bin/solium --dir ./contracts/",
     "build": "stencil build --prerender",
     "dev": "sd concurrent \"stencil build --dev --watch\" \"stencil-dev-server\" ",
     "serve": "stencil-dev-server",
     "start": "npm run dev",
-    "test": "jest --no-cache",
     "test.watch": "jest --watch --no-cache"
   },
   "author": "Joshua Richardson (Arctek)",
   "license": "MIT",
   "dependencies": {
     "@stencil/core": "0.0.7",
+    "@stencil/router": "0.0.17",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-register": "^6.26.0",
@@ -30,10 +30,18 @@
     "chai": "^4.1.2",
     "ethereumjs-util": "^5.1.2",
     "lodash": "^4.17.4",
-    "solium": "^0.5.5"
+    "sd": "0.0.3",
+    "solium": "^0.5.5",
+    "web3": "^0.18.4"
   },
   "devDependencies": {
+    "@stencil/dev-server": "0.0.17",
+    "@stencil/utils": "0.0.4",
+    "@types/jest": "^21.1.1",
     "eth-gas-reporter": "0.0.12",
+    "jest": "^21.2.1",
+    "json-loader": "^0.5.7",
+    "web3-typescript-typings": "^0.7.2",
     "webpack": "^3.8.1"
   },
   "jest": {
