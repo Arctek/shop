@@ -1,6 +1,6 @@
 /*! Built with http://stenciljs.com */
 
-App.loadStyles("shop-app","body, html {\n  padding: 0;\n  margin: 0;\n  font-size: 13px;\n}\n\nshop-app {\n  font-family: Courier New, Courier, monospace;\n  font-weight: bold;\n  color: #fff;\n}\n\nheader {\n  background: #DE7150;\n  padding: 1rem 0.75rem;\n}\n\nh1 {\n  margin: 0;\n  padding: 0;\n  display: inline-block;\n}\nshop-app.hydrated{visibility:inherit}");
+App.loadStyles("shop-app","body, html {\n  padding: 0;\n  margin: 0;\n  font-size: 13px;\n}\n\nshop-app {\n  font-family: Courier New, Courier, monospace;\n  font-weight: bold;\n  color: #000;\n}\n\nheader {\n  background: #DE7150;\n  padding: 1rem 0.75rem;\n  color: #fff;\n}\n\nh1 {\n  margin: 0;\n  padding: 0;\n  display: inline-block;\n}\n\n.width-container {\n  margin: 0 auto;\n  max-width: 1024px;\n}\n\nmain {\n  padding-top: 2rem;\n}\n\ninput {\n  border: 1px solid #ccc;\n  padding: 4px 6px;\n  font-family: Arial, Helvetica, sans serif, serif;\n  color: #555;\n  border-radius: 4px;\n  font-size: 1.1rem;\n}\n\ninput:focus {\n  border: 1px solid #555;\n}\n\nbutton {\n  cursor: pointer;\n  padding: 6px 11px;\n  border: 1px solid #DE7150;\n  border-radius: 4px;\n  background: #fff;\n  transition: background-color 180ms, border-color 180ms, color 180ms;\n  font-weight: bold;\n  margin-top: 1.2rem;\n}\n\nbutton:hover, button:focus {\n  border: 1px solid #cc674b;\n  background: #DE7150;\n  color: #fff;\n}\n\n.loading-icon {\n  margin: 0 auto;\n  width: 25%;\n  padding-bottom: 25%;\n  background-image: url(/assets/img/spinner.svg);\n  background-size: cover;\n}\nshop-app.hydrated{visibility:inherit}");
 App.loadComponents(
 
 /**** module id (dev mode) ****/
@@ -5581,41 +5581,44 @@ var bluebird_1 = bluebird;
 
 var ShopApp = /** @class */ (function () {
     function ShopApp() {
+        this.isLoading = false;
     }
     ShopApp.prototype.componentDidLoad = function () {
         var _this = this;
         var self = this;
+        console.log("Load");
         var getWeb3 = new bluebird_1(function (resolve, reject) {
             // Wait for loading completion to avoid race conditions with web3 injection timing.
-            window.addEventListener('load', function () {
-                var results;
-                var web3; // = window.web3
-                if ('web3' in window) {
-                    web3 = window.web3;
-                }
-                // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-                if (typeof web3 !== 'undefined') {
-                    // Use Mist/MetaMask's provider.
-                    web3 = new Web3(web3.currentProvider);
-                    results = {
-                        web3: web3
-                    };
-                    console.log('Injected web3 detected.');
-                    resolve(results);
-                }
-                else {
-                    // Fallback to localhost if no web3 injection. We've configured this to
-                    // use the development console's port by default.
-                    var provider = new Web3.providers.HttpProvider('http://127.0.0.1:8545');
-                    web3 = new Web3(provider);
-                    results = {
-                        web3: web3
-                    };
-                    console.log('No web3 instance injected, using Local web3.');
-                    resolve(results);
-                }
-            });
+            //window.addEventListener('load', function() {
+            var results;
+            var web3; // = window.web3
+            if ('web3' in window) {
+                web3 = window.web3;
+            }
+            // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+            if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider.
+                web3 = new Web3(web3.currentProvider);
+                results = {
+                    web3: web3
+                };
+                console.log('Injected web3 detected.');
+                resolve(results);
+            }
+            else {
+                // Fallback to localhost if no web3 injection. We've configured this to
+                // use the development console's port by default.
+                var provider = new Web3.providers.HttpProvider('http://127.0.0.1:8545');
+                web3 = new Web3(provider);
+                results = {
+                    web3: web3
+                };
+                console.log('No web3 instance injected, using Local web3.');
+                resolve(results);
+            }
+            //  })
         });
+        this.isLoading = true;
         getWeb3
             .then(function (results) {
             var web3 = results.web3;
@@ -5626,26 +5629,36 @@ var ShopApp = /** @class */ (function () {
             _this.web3.eth.getAccountsPromise(function (err, accounts) {
                 self.accounts = accounts;
                 console.log(accounts);
+                _this.isLoading = false;
             })
                 .catch(function (err) {
                 console.log("No accounts");
+                _this.isLoading = false;
             });
             // Instantiate contract once web3 provided.
             //this.instantiateContract()
         })
             .catch(function () {
             console.log('Error finding web3.');
+            _this.isLoading = false;
         });
     };
     ShopApp.prototype.userAccountSelectedHandler = function (event) {
         this.account = event.detail.account;
     };
+    ShopApp.prototype.createShopHandler = function (event) {
+        alert(event.detail.shopName);
+    };
     ShopApp.prototype.render = function () {
         return (h("div", null,
             h("header", { class: "clearfix" },
-                h("h1", null, "Shop Front DAPP"),
-                h("user-accounts", { accounts: this.accounts, account: this.account })),
-            h("main", null)));
+                h("div", { class: "width-container" },
+                    h("h1", null, "Shop Front DAPP"),
+                    h("user-accounts", { accounts: this.accounts, account: this.account }))),
+            h("main", null,
+                h("div", { class: "width-container" }, this.isLoading == true
+                    ? h("div", { class: "loading-icon" })
+                    : h("create-shop", null)))));
     };
     return ShopApp;
 }());
@@ -5663,6 +5676,7 @@ exports['shop-app'] = ShopApp;
 [
   [ "account", /** state **/ 5, /** do not observe attribute **/ 0, /** type any **/ 1 ],
   [ "accounts", /** state **/ 5, /** do not observe attribute **/ 0, /** type any **/ 1 ],
+  [ "isLoading", /** state **/ 5, /** do not observe attribute **/ 0, /** type any **/ 1 ],
   [ "shop", /** state **/ 5, /** do not observe attribute **/ 0, /** type any **/ 1 ],
   [ "shops", /** state **/ 5, /** do not observe attribute **/ 0, /** type any **/ 1 ],
   [ "web3", /** state **/ 5, /** do not observe attribute **/ 0, /** type any **/ 1 ]

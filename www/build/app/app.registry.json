@@ -2,6 +2,21 @@
   "namespace": "App",
   "components": [
     [
+      "create-shop",
+      "create-shop",
+      1,
+      [
+        [
+          "formVisible",
+          5
+        ],
+        [
+          "shopName",
+          5
+        ]
+      ]
+    ],
+    [
       "shop-app",
       "shop-app",
       1,
@@ -12,6 +27,10 @@
         ],
         [
           "accounts",
+          5
+        ],
+        [
+          "isLoading",
           5
         ],
         [
@@ -30,6 +49,10 @@
       0,
       0,
       [
+        [
+          "createShop",
+          "createShopHandler"
+        ],
         [
           "userAccountSelected",
           "userAccountSelectedHandler"

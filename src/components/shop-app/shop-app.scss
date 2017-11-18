@@ -7,16 +7,65 @@ body, html {
 shop-app {
   font-family: Courier New, Courier, monospace;
   font-weight: bold;
-  color: #fff;
+  color: #000;
 }
 
 header {
     background: #DE7150;
     padding: 1rem 0.75rem;
+    color: #fff;
 }
 
 h1 {
     margin: 0;
     padding: 0;
     display: inline-block;
+}
+
+.width-container {
+    margin:0 auto;
+    max-width: 1024px;
+}
+
+main {
+    padding-top:2rem;
+}
+
+input {
+    border:1px solid #ccc;
+    padding: 4px 6px;
+    font-family: Arial, Helvetica, sans serif, serif;
+    color: #555;
+    border-radius:4px;
+    font-size: 1.1rem;
+
+    &:focus {
+        border:1px solid #555;
+    }
+}
+
+button {
+    cursor: pointer;
+    padding: 6px 11px;
+    border: 1px solid #DE7150;
+    border-radius: 4px;
+    background:#fff;
+    transition: background-color 180ms, border-color 180ms, color 180ms;
+    font-weight: bold;
+    margin-top: 1.2rem;
+
+    &:hover, &:focus {
+        border:1px solid #cc674b;
+        background:#DE7150;
+        color: #fff;
+    }
+}
+
+.loading-icon {
+    margin:0 auto;
+    width: 25%;
+    padding-bottom:25%;
+    background-image:url(/assets/img/spinner.svg);
+    background-size:cover;
+
 }

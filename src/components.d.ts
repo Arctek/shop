@@ -6,6 +6,35 @@
 
 import '@stencil/router';
 
+import { UserAccounts as CreateShop } from './components/create-shop/create-shop';
+
+interface HTMLCreateShopElement extends CreateShop, HTMLElement {
+}
+declare var HTMLCreateShopElement: {
+  prototype: HTMLCreateShopElement;
+  new (): HTMLCreateShopElement;
+};
+declare global {
+  interface HTMLElementTagNameMap {
+      "create-shop": HTMLCreateShopElement;
+  }
+  interface ElementTagNameMap {
+      "create-shop": HTMLCreateShopElement;
+  }
+  namespace JSX {
+      interface IntrinsicElements {
+          "create-shop": JSXElements.CreateShopAttributes;
+      }
+  }
+  namespace JSXElements {
+      export interface CreateShopAttributes extends HTMLAttributes {
+          mode?: string,
+          color?: string,
+        
+      }
+  }
+}
+
 import { ShopApp as ShopApp } from './components/shop-app/shop-app';
 
 interface HTMLShopAppElement extends ShopApp, HTMLElement {

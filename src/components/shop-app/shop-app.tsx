@@ -1,6 +1,8 @@
 import { Component, State, Listen } from '@stencil/core';
 import { default as Promise } from 'bluebird';
 
+import SimpleStorageContract from '../build/contracts/SimpleStorage.json'
+
 declare global {
     interface Window { web3: any; }
 }
@@ -19,12 +21,15 @@ export class ShopApp {
   @State() account: string;
   @State() shops: any;
   @State() shop: any;
+
+  @State() isLoading = false;
  
   componentDidLoad() {
     let self = this;
+    console.log("Load");
     let getWeb3 = new Promise(function(resolve, reject) {
       // Wait for loading completion to avoid race conditions with web3 injection timing.
-      window.addEventListener('load', function() {
+      //window.addEventListener('load', function() {
         var results
         var web3;// = window.web3
 
@@ -59,8 +64,10 @@ export class ShopApp {
 
           resolve(results)
         }
-      })
-    })
+     //  })
+    });
+
+    this.isLoading = true;
 
     getWeb3
     .then(results => {
@@ -76,9 +83,13 @@ export class ShopApp {
       this.web3.eth.getAccountsPromise((err, accounts) => {
         self.accounts = accounts;
         console.log(accounts);
+
+        this.isLoading = false;
       })
       .catch(err => {
         console.log("No accounts");
+
+        this.isLoading = false;
       })
 
 
@@ -86,7 +97,8 @@ export class ShopApp {
       //this.instantiateContract()
     })
     .catch(() => {
-      console.log('Error finding web3.')
+      console.log('Error finding web3.');
+      this.isLoading = false;
     });
   }
 
@@ -95,15 +107,27 @@ export class ShopApp {
     this.account = event.detail.account; 
   }
 
+  @Listen('createShop')
+  createShopHandler(event: CustomEvent) {
+    
+  }
+  
   render() {
     return (
       <div>
         <header class="clearfix">
-          <h1>Shop Front DAPP</h1>
-          <user-accounts accounts={this.accounts} account={this.account} />
+          <div class="width-container">
+            <h1>Shop Front DAPP</h1>
+            <user-accounts accounts={this.accounts} account={this.account} />
+          </div>
         </header>
         <main>
-
+          <div class="width-container">
+            {this.isLoading == true
+            ? <div class="loading-icon" />
+            : <create-shop />
+            }
+          </div>
         </main>
       </div>
     );
