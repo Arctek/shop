@@ -78,7 +78,19 @@ export class ShopApp {
   getShops() {
     this.isLoading = true;
 
-    this.shopFactory.getShopCount().then((shopCount) => {
+    this.contractChildCollectionIterator(
+      this.shopFactory.getShopCount,
+      this.shopFactory.shopIndex,
+      this.shopContract,
+      { name: this.web3.toAscii },
+      this.shops
+    )
+    .then(shops => {
+      this.shops = shops;
+
+      this.isLoading = false;
+    });
+    /*this.shopFactory.getShopCount().then((shopCount) => {
 
       let promiseChain = [];
       let shops = {};
@@ -106,7 +118,54 @@ export class ShopApp {
         this.isLoading = false;
       });
 
-    });    
+    });*/
+  }
+
+  // iterate over children contracts that belong to a parent contract; i.e. shops belong to shopfactory, products belong to shops
+  contractChildCollectionIterator(parentCountFunction, parentIndexFunction, childContract, childProperties, cachedCollection) {
+    return parentCountFunction().then((childCount) => {
+      let promiseChain = [];
+      let children = {};
+      let noExisting = !cachedCollection;
+
+      for (let i = 0; i < childCount; i++) {
+        promiseChain.push(
+          parentIndexFunction(i).then( (childAddress) => {
+            if (noExisting || !(childAddress in cachedCollection)) {
+              return childContract.at(childAddress)
+              .then(contract => {
+                let child = { ...childProperties, contract: contract };
+                
+                let propPromiseChain = [];
+                Object.keys(childProperties).map((item, i) =>
+                  propPromiseChain.push(
+                    contract[item]().then(prop => {
+                      if (typeof child[item] === "function") {
+                        child[item] = child[item](prop);
+                      }
+                      else {
+                        child[item] = prop;
+                      }
+                    })
+                  )
+                );
+                return Promise.all(propPromiseChain).then(() => {
+                  children[childAddress] = child;
+                });
+              });
+            }
+            else {
+              children[childAddress] = cachedCollection[childAddress];
+            }
+          })
+        );
+      }
+
+      return Promise.all(promiseChain).then(() => {
+        return children;
+      });
+
+    });
   }
 
   componentDidLoad() {   
