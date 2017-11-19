@@ -17,8 +17,8 @@
         }
       ],
       "payable": false,
-      "type": "function",
-      "stateMutability": "nonpayable"
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "constant": false,
@@ -36,8 +36,8 @@
         }
       ],
       "payable": false,
-      "type": "function",
-      "stateMutability": "nonpayable"
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "constant": true,
@@ -59,8 +59,8 @@
         }
       ],
       "payable": false,
-      "type": "function",
-      "stateMutability": "view"
+      "stateMutability": "view",
+      "type": "function"
     },
     {
       "constant": true,
@@ -78,8 +78,8 @@
         }
       ],
       "payable": false,
-      "type": "function",
-      "stateMutability": "view"
+      "stateMutability": "view",
+      "type": "function"
     },
     {
       "constant": true,
@@ -92,8 +92,8 @@
         }
       ],
       "payable": false,
-      "type": "function",
-      "stateMutability": "view"
+      "stateMutability": "view",
+      "type": "function"
     },
     {
       "constant": true,
@@ -106,8 +106,8 @@
         }
       ],
       "payable": false,
-      "type": "function",
-      "stateMutability": "view"
+      "stateMutability": "view",
+      "type": "function"
     },
     {
       "anonymous": false,
@@ -132,11 +132,6 @@
         {
           "indexed": false,
           "name": "merchant",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "name": "newOwner",
           "type": "address"
         }
       ],
@@ -1618,47 +1613,11 @@
   },
   "networks": {
     "5777": {
-      "events": {
-        "0x832b1dcdcff89ee192e39e7570054cabf3b2c91e32da7ccb9607bd59704abfa0": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "merchant",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "shopName",
-              "type": "bytes32"
-            }
-          ],
-          "name": "LogDeployShop",
-          "type": "event"
-        },
-        "0xc66d1d23a5b7baf1f496bb19f580d7b12070ad5a08a758c990db97d961fa33a6": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "oldOwner",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "newOwner",
-              "type": "address"
-            }
-          ],
-          "name": "LogSetOwner",
-          "type": "event"
-        }
-      },
+      "events": {},
       "links": {},
-      "address": "0x2c2b9c9a4a25e24b174f26114e8926a9f2128fe4",
-      "updated_at": 1511006648357
+      "address": "0x345ca3e014aaf5dca488057592ee47305d9b3e10"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2017-11-18T12:12:23.270Z"
+  "updatedAt": "2017-11-19T04:33:52.765Z"
 }

@@ -1,12 +1,15 @@
 import { Component, State, Listen } from '@stencil/core';
-import { default as Promise } from 'bluebird';
+import { default as Bluebird } from 'bluebird';
+//import * as TruffleContract from 'truffle-contract';
+
+const ShopFactoryAddress = "0x2c2b9c9a4a25e24b174f26114e8926a9f2128fe4";
 
 let Shop, ShopFactory, Product, Order;
 /*
 let Shop;
 
 fetch('../../package.json')
-.then(resp => resp.json())
+.then(resp => resp.json()) 
 .then((packageJson) => { 
   console.log(packageJson.version); 
 }); 
@@ -22,6 +25,11 @@ declare global {
 
 /* For now until stencil fixes JS imports, just use global web3 object */
 declare var Web3:any;
+declare var TruffleContract:any;
+
+interface GetWeb3Result {
+  web3: any
+}
 
 @Component({
   tag: 'shop-app',
@@ -34,22 +42,81 @@ export class ShopApp {
   @State() account: string;
   @State() shops: any;
   @State() shop: any;
+  @State() shopFactory: any;
 
   @State() isLoading = false;
- 
-  componentDidLoad() {
-    fetch('/assets/contracts/ShopFactory.json').then(resp => resp.json()).then((ABI) => { ShopFactory = ABI; }); 
-    fetch('/assets/contracts/Shop.json').then(resp => resp.json()).then((ABI) => { Shop = ABI; }); 
-    fetch('/assets/contracts/Product.json').then(resp => resp.json()).then((ABI) => { Product = ABI; }); 
-    fetch('/assets/contracts/Order.json').then(resp => resp.json()).then((ABI) => { Order = ABI; }); 
 
+  shopFactoryContract: any;
+  shopContract: any;
+  productContract: any;
+  orderContract: any;
+ 
+  fetchContractsABI() {
+    return Promise.all([
+      fetch('/assets/contracts/ShopFactory.json', {cache: "no-store"}).then(resp => resp.json()).then((ABI) => { ShopFactory = ABI; }),
+      fetch('/assets/contracts/Shop.json', {cache: "no-store"}).then(resp => resp.json()).then((ABI) => { Shop = ABI; }),
+      fetch('/assets/contracts/Product.json', {cache: "no-store"}).then(resp => resp.json()).then((ABI) => { Product = ABI; }),
+      fetch('/assets/contracts/Order.json', {cache: "no-store"}).then(resp => resp.json()).then((ABI) => { Order = ABI; })
+    ]); 
+  }
+
+  instantiateContracts() {
+
+    this.shopFactoryContract = TruffleContract(ShopFactory);
+    this.shopFactoryContract.setProvider(this.web3.currentProvider);
+    this.shopContract = TruffleContract(Shop);
+    this.shopContract.setProvider(this.web3.currentProvider);
+    this.productContract = TruffleContract(Product);
+    this.productContract.setProvider(this.web3.currentProvider);
+    this.orderContract = TruffleContract(Order);
+    this.orderContract.setProvider(this.web3.currentProvider);
+
+    this.shopFactoryContract.deployed().then(instance => this.shopFactory = instance).then(() => this.getShops());
+  }
+
+  //getShops = async () => {
+  getShops() {
+    this.isLoading = true;
+
+    this.shopFactory.getShopCount().then((shopCount) => {
+
+      let promiseChain = [];
+      let shops = {};
+      let noShops = !this.shops;
+
+      for (let i = 0; i < shopCount; i++) {
+        promiseChain.push(
+          this.shopFactory.shopIndex(i).then( (shopAddress) => {
+            if (noShops || !(shopAddress in this.shops)) {
+              return this.shopContract.at(shopAddress)
+              .then(contract => shops[shopAddress] = {contract: contract, name: ""})
+              .then(() => shops[shopAddress].contract.name())
+              .then(name => shops[shopAddress].name = name);
+            }
+            else {
+              shops[shopAddress] = this.shops[shopAddress];
+            }
+          })
+        );
+      }
+
+      Promise.all(promiseChain).then(() => {
+        this.shops = shops;
+
+        this.isLoading = false;
+      });
+
+    });    
+  }
+
+  componentDidLoad() {   
     let self = this;
 
+    let fetchContractsPromise = self.fetchContractsABI();
+
     let getWeb3 = new Promise(function(resolve, reject) {
-      // Wait for loading completion to avoid race conditions with web3 injection timing.
-      //window.addEventListener('load', function() {
-        var results
-        var web3;// = window.web3
+        let results: GetWeb3Result;
+        let web3;// = window.web3
 
         if ('web3' in window) {
           web3 = window.web3;
@@ -70,7 +137,7 @@ export class ShopApp {
         } else {
           // Fallback to localhost if no web3 injection. We've configured this to
           // use the development console's port by default.
-          var provider = new Web3.providers.HttpProvider('http://127.0.0.1:8545')
+          let provider = new Web3.providers.HttpProvider('http://127.0.0.1:8545')
 
           web3 = new Web3(provider)
 
@@ -82,18 +149,18 @@ export class ShopApp {
 
           resolve(results)
         }
-     //  })
     });
 
     this.isLoading = true;
 
     getWeb3
-    .then(results => {
-
+    .then((results: GetWeb3Result) => {
+      console.log(results);
+      
       let web3 = results.web3;
 
       if (typeof web3.eth.getBlockPromise !== "function") {
-        Promise.promisifyAll(web3.eth, { suffix: "Promise" });
+        Bluebird.promisifyAll(web3.eth, { suffix: "Promise" });
       }
 
       self.web3 = web3;
@@ -108,11 +175,11 @@ export class ShopApp {
         console.log("No accounts");
 
         this.isLoading = false;
-      })
+      });
 
 
-      // Instantiate contract once web3 provided.
-      //this.instantiateContract()
+      // Instantiate contract once web3 provided; and abi's fetched
+      fetchContractsPromise.then(() => this.instantiateContracts());
     })
     .catch((err) => {
       console.log('Error finding web3:');
@@ -129,9 +196,29 @@ export class ShopApp {
   @Listen('createShop')
   createShopHandler(event: CustomEvent) {
     this.isLoading = true;
+
+    this.shopFactory.deployShop(event.detail.shopName, { from: this.account, gas: 33000000 }).then(() => this.getShops());
   }
   
   render() {
+    let mainContent = [];
+
+    if (this.isLoading) {
+      mainContent.push(<div class="loading-icon" />);
+    }
+    else {
+
+      if (this.shops) {
+        Object.keys(this.shops).map((item, i) => {
+          let shop = this.shops[item];
+
+          mainContent.push(<div class="shop-tile">{shop.name}</div>);
+        });
+      }
+
+      mainContent.push(<create-shop />);
+    }
+
     return ( 
       <div>
         <header class="clearfix">
@@ -142,10 +229,7 @@ export class ShopApp {
         </header>
         <main>
           <div class="width-container">
-            {this.isLoading == true
-            ? <div class="loading-icon" />
-            : <create-shop />
-            }
+            {mainContent}
           </div>
         </main>
       </div>

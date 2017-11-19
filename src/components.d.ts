@@ -8,11 +8,6 @@ import '@stencil/router';
 
 import { UserAccounts as CreateShop } from './components/create-shop/create-shop';
 
-declare module "*.json" {
-    const value: any;
-    export default value;
-}
-
 interface HTMLCreateShopElement extends CreateShop, HTMLElement {
 }
 declare var HTMLCreateShopElement: {

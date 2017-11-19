@@ -6,10 +6,10 @@ module.exports = {
     development: {
       host: "localhost",
       port: 8545,
-      network_id: "*" // Match any network id
+      network_id: "*", // Match any network id
     }
   },
- // contracts_build_directory: "./src/contracts",
+  //contracts_build_directory: "./src/contracts",
   /*,
   mocha: {
     reporter: 'eth-gas-reporter'
