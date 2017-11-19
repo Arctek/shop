@@ -81,46 +81,51 @@ export class ShopApp {
       this.shopFactory.getShopCount,
       this.shopFactory.shopIndex,
       this.shopContract,
-      { name: this.web3.toAscii },
+      { name: this.web3.toAscii, merchant: '' },
       this.shops
     )
     .then(shops => {
       this.shops = shops;
+      this.isLoading = false; 
+    });
+  }
+
+  loadShopProducts(shop) {
+    this.isLoading = true;
+
+    let shopContract = this.shops[shop].contract;
+
+    // fetch products for shop
+    this.contractChildCollectionIterator(
+      shopContract.getProductCount,
+      shopContract.productIndex,
+      this.productContract,
+      { 
+        name: this.web3.toAscii,
+        sku: this.web3.toAscii,
+        category: this.web3.toAscii,
+        price: 0,
+        stock: 0,
+        image: this.web3.toAscii,
+      },
+      null
+    )
+    .then(products => {
+      this.shops[shop].products = products;
+      this.shop = shop;
       this.isLoading = false;
     });
   }
 
   selectShop(shop) {
     if (!('products' in this.shops[shop])) {
-      this.isLoading = true;
-
-      let shopContract = this.shops[shop].contract;
-
-      // fetch products for shop
-      this.contractChildCollectionIterator(
-        shopContract.getProductCount,
-        shopContract.productIndex,
-        this.productContract,
-        { 
-          name: this.web3.toAscii,
-          sku: this.web3.toAscii,
-          category: this.web3.toAscii,
-          price: 0,
-          stock: 0,
-          image: this.web3.toAscii,
-        },
-        null
-      )
-      .then(products => {
-        this.shops[shop].products = products;
-        this.shop = shop;
-        this.isLoading = false;
-      });
+      this.loadShopProducts(shop);
     }
     else {
       this.shop = shop;
     }
   }
+
 
   // iterate over children contracts that belong to a parent contract; i.e. shops belong to shopfactory, products belong to shops
   contractChildCollectionIterator(parentCountFunction, parentIndexFunction, childContract, childProperties, cachedCollection) {
@@ -130,17 +135,18 @@ export class ShopApp {
       let noExisting = !cachedCollection;
 
       for (let i = 0; i < childCount; i++) {
+
         promiseChain.push(
           parentIndexFunction(i).then( (childAddress) => {
             if (noExisting || !(childAddress in cachedCollection)) {
               return childContract.at(childAddress)
               .then(contract => {
                 let child = { ...childProperties, contract: contract };
-                
+                console.log(contract);
                 let propPromiseChain = [];
-                Object.keys(childProperties).map((item, i) =>
+                Object.keys(childProperties).map((item, i) => {
                   propPromiseChain.push(
-                    contract[item]().then(prop => {
+                    contract[item].call().then(prop => {
                       if (typeof child[item] === "function") {
                         child[item] = child[item](prop);
                       }
@@ -149,6 +155,7 @@ export class ShopApp {
                       }
                     })
                   )
+                  }
                 );
                 return Promise.all(propPromiseChain).then(() => {
                   children[childAddress] = child;
@@ -222,6 +229,9 @@ export class ShopApp {
         Bluebird.promisifyAll(web3.eth, { suffix: "Promise" });
       }
 
+      web3.toAsciiOriginal = web3.toAscii;
+      web3.toAscii = function (input) { return web3.toAsciiOriginal(input).replace(/\u0000/g, '') }
+
       self.web3 = web3;
 
       this.web3.eth.getAccountsPromise((err, accounts) => {
@@ -247,7 +257,7 @@ export class ShopApp {
     });
   }
 
-  
+
   selectAccount = (account) => {
     this.account = account; 
   }
@@ -259,6 +269,17 @@ export class ShopApp {
   }
 
   createProduct = (fields) => {
+    let shopContract = this.shops[this.shop].contract;
+
+    shopContract.addProduct(
+      fields.name,
+      fields.sku,
+      fields.category,
+      fields.price,
+      fields.stock,
+      fields.image,
+      { from: this.account, gas: 18000000 }
+    ).then(() => this.loadShopProducts(this.shop));
 
   }
   
@@ -271,13 +292,31 @@ export class ShopApp {
     else {
       if (this.shop) {
 
-        if ('products' in this.shops[this.shop]) {
-          let products = this.shops[this.shop].products;
+        let shop = this.shops[this.shop];
+
+        if ('products' in shop) {
+          let products = shop.products;
 
           Object.keys(products).map((item, i) => {
-            let shop = products[item];
+            let product = products[item];
 
-            //mainContent.push(<div class="shop-tile" onClick={() => this.selectShop(item)}><div class="title">{shop.name}</div></div>);
+            let imageStyle = { 'backgroundImage': 'url('+product.image.trim()+')' };
+
+            mainContent.push(
+              <div class="product-tile">
+                <div class="product-image" style={imageStyle} />
+                <div class="product-title">{product.name}</div>
+                <div class="product-sku">SKU: {product.name}</div>
+                <div class="product-category">Category: {product.category}</div>
+                <div class="product-price">Price: {product.price.toString(10)} wei</div>
+                <div class="product-stock">Stock: {product.stock.toString(10)}</div>
+                <button class="add-cart">Add to Cart</button>
+                {shop.merchant === this.account
+                ? <div class="product-merchant"><button>Edit</button><button>Delete</button></div>
+                : <div />
+                }
+              </div>
+            );
           });
         }
 
@@ -290,7 +329,7 @@ export class ShopApp {
           image: "Image"
         };
 
-        mainContent.push(<create-tile-form title="Create Product" fields={fields} callback={this.createProduct} />);
+        mainContent.push(<div><create-tile-form title="Create Product" fields={fields} callback={this.createProduct} /></div>);
 
       }
       else {

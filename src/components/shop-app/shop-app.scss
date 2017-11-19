@@ -92,3 +92,53 @@ button {
     cursor: pointer;
   }
 }
+
+.product-tile {
+  font-family: Arial, Helvetica, sans serif, serif;
+  display: inline-block;
+  border:1px solid #ddd;
+  border-radius:6px;
+  box-shadow:1px 1px 2px rgba(0,0,0,0.1);
+  overflow: hidden;
+  vertical-align: top;
+  margin-right: 2.5rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+
+  & button { 
+    display: block;
+    margin-left:auto;
+    margin-right:auto;
+  }
+}
+
+.add-cart {
+    margin-bottom: 1.5rem;
+}
+
+.product-image {
+    width: 100%;
+    padding-bottom:50%;
+    background-size:contain;
+    background-position:center;
+    background-repeat:no-repeat;
+}
+
+.product-title {
+    font-weight: bold;
+    padding:1rem 1.5rem;
+    font-size: 1.2rem;
+}
+
+.product-sku,
+.product-category,
+.product-price,
+.product-stock {
+    padding:1rem 1.5rem
+}
+
+.product-merchant {
+    padding-bottom:1.5rem;
+    padding-top:0.3rem;
+    background:#f2f2f2
+}
