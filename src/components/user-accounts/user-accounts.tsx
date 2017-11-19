@@ -8,6 +8,7 @@ export class UserAccounts {
 
   @Prop() accounts = [];
   @Prop() account = '';
+  @Prop() callback: Function;
 
   @State() toggle = false;
 
@@ -21,7 +22,7 @@ export class UserAccounts {
   }
 
   selectAccount(act) {
-    this.userAccountSelected.emit({ account: act });
+    this.callback(act);
     this.toggleClick();
   }
 

@@ -90,7 +90,8 @@ declare global {
           color?: string,
         
           accounts?: any,
-          account?: string
+          account?: string,
+          callback?: any
       }
   }
 }

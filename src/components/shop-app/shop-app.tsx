@@ -74,7 +74,6 @@ export class ShopApp {
     this.shopFactoryContract.deployed().then(instance => this.shopFactory = instance).then(() => this.getShops());
   }
 
-  //getShops = async () => {
   getShops() {
     this.isLoading = true;
 
@@ -87,38 +86,40 @@ export class ShopApp {
     )
     .then(shops => {
       this.shops = shops;
-
       this.isLoading = false;
     });
-    /*this.shopFactory.getShopCount().then((shopCount) => {
+  }
 
-      let promiseChain = [];
-      let shops = {};
-      let noShops = !this.shops;
+  selectShop(shop) {
+    if (!('products' in this.shops[shop])) {
+      this.isLoading = true;
 
-      for (let i = 0; i < shopCount; i++) {
-        promiseChain.push(
-          this.shopFactory.shopIndex(i).then( (shopAddress) => {
-            if (noShops || !(shopAddress in this.shops)) {
-              return this.shopContract.at(shopAddress)
-              .then(contract => shops[shopAddress] = {contract: contract, name: ""})
-              .then(() => shops[shopAddress].contract.name())
-              .then(name => shops[shopAddress].name = name);
-            }
-            else {
-              shops[shopAddress] = this.shops[shopAddress];
-            }
-          })
-        );
-      }
+      let shopContract = this.shops[shop].contract;
 
-      Promise.all(promiseChain).then(() => {
-        this.shops = shops;
-
+      // fetch products for shop
+      this.contractChildCollectionIterator(
+        shopContract.getProductCount,
+        shopContract.productIndex,
+        this.productContract,
+        { 
+          name: this.web3.toAscii,
+          sku: this.web3.toAscii,
+          category: this.web3.toAscii,
+          price: 0,
+          stock: 0,
+          image: this.web3.toAscii,
+        },
+        null
+      )
+      .then(products => {
+        this.shops[shop].products = products;
+        this.shop = shop;
         this.isLoading = false;
       });
-
-    });*/
+    }
+    else {
+      this.shop = shop;
+    }
   }
 
   // iterate over children contracts that belong to a parent contract; i.e. shops belong to shopfactory, products belong to shops
@@ -171,6 +172,7 @@ export class ShopApp {
   componentDidLoad() {   
     let self = this;
 
+    // run this straight up, since to fetch the json we don't need to wait on web3 just yet
     let fetchContractsPromise = self.fetchContractsABI();
 
     let getWeb3 = new Promise(function(resolve, reject) {
@@ -213,9 +215,7 @@ export class ShopApp {
     this.isLoading = true;
 
     getWeb3
-    .then((results: GetWeb3Result) => {
-      console.log(results);
-      
+    .then((results: GetWeb3Result) => {      
       let web3 = results.web3;
 
       if (typeof web3.eth.getBlockPromise !== "function") {
@@ -247,16 +247,19 @@ export class ShopApp {
     });
   }
 
-  @Listen('userAccountSelected')
-  userAccountSelectedHandler(event: CustomEvent) {
-    this.account = event.detail.account; 
+  
+  selectAccount = (account) => {
+    this.account = account; 
   }
 
-  @Listen('createShop')
-  createShopHandler(event: CustomEvent) {
+  createShop = (fields) => {
     this.isLoading = true;
 
-    this.shopFactory.deployShop(event.detail.shopName, { from: this.account, gas: 33000000 }).then(() => this.getShops());
+    this.shopFactory.deployShop(fields.name, { from: this.account, gas: 33000000 }).then(() => this.getShops());
+  }
+
+  createProduct = (fields) => {
+
   }
   
   render() {
@@ -266,16 +269,43 @@ export class ShopApp {
       mainContent.push(<div class="loading-icon" />);
     }
     else {
+      if (this.shop) {
 
-      if (this.shops) {
-        Object.keys(this.shops).map((item, i) => {
-          let shop = this.shops[item];
+        if ('products' in this.shops[this.shop]) {
+          let products = this.shops[this.shop].products;
 
-          mainContent.push(<div class="shop-tile">{shop.name}</div>);
-        });
+          Object.keys(products).map((item, i) => {
+            let shop = products[item];
+
+            //mainContent.push(<div class="shop-tile" onClick={() => this.selectShop(item)}><div class="title">{shop.name}</div></div>);
+          });
+        }
+
+        let fields = { 
+          name: "Product Name",
+          sku: "SKU",
+          category: "Category",
+          price: "Price",
+          stock: "Stock",
+          image: "Image"
+        };
+
+        mainContent.push(<create-tile-form title="Create Product" fields={fields} callback={this.createProduct} />);
+
       }
+      else {
+        if (this.shops) {
+          Object.keys(this.shops).map((item, i) => {
+            let shop = this.shops[item];
 
-      mainContent.push(<create-shop />);
+            mainContent.push(<div class="shop-tile" onClick={() => this.selectShop(item)}><div class="title">{shop.name}</div></div>);
+          });
+        }
+
+        let fields = { name: "Shop Name" };
+
+        mainContent.push(<create-tile-form title="Create Shop" fields={fields} callback={this.createShop} />);
+      }
     }
 
     return ( 
@@ -283,7 +313,7 @@ export class ShopApp {
         <header class="clearfix">
           <div class="width-container">
             <h1>Shop Front DAPP</h1>
-            <user-accounts accounts={this.accounts} account={this.account} />
+            <user-accounts accounts={this.accounts} account={this.account} callback={this.selectAccount} />
           </div>
         </header>
         <main>
