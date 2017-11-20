@@ -1,23 +1,7 @@
 import { Component, State, Listen } from '@stencil/core';
 import { default as Bluebird } from 'bluebird';
-//import * as TruffleContract from 'truffle-contract';
-
-const ShopFactoryAddress = "0x2c2b9c9a4a25e24b174f26114e8926a9f2128fe4";
 
 let Shop, ShopFactory, Product, Order;
-/*
-let Shop;
-
-fetch('../../package.json')
-.then(resp => resp.json()) 
-.then((packageJson) => { 
-  console.log(packageJson.version); 
-}); 
-//import Shop from './Shop.json';    
-//import ShopFactory from '../../../build/contracts/ShopFactory.json';
-//import Shop from '../../../build/contracts/Shop.json';
-//import Product from '../../../build/contracts/Product.json';
-//import Order from '../../../build/contracts/Order.json';*/ 
 
 declare global { 
     interface Window { web3: any; }
@@ -42,6 +26,7 @@ export class ShopApp {
   @State() account: string;
   @State() shops: any;
   @State() shop: any;
+  @State() product: any;
   @State() shopFactory: any;
 
   @State() isLoading = false;
@@ -107,6 +92,7 @@ export class ShopApp {
         price: 0,
         stock: 0,
         image: this.web3.toAscii,
+        merchant: ''
       },
       null
     )
@@ -118,6 +104,10 @@ export class ShopApp {
   }
 
   selectShop(shop) {
+    if (shop === null) {
+      this.product = null;
+    }
+
     if (shop && !('products' in this.shops[shop])) {
       this.loadShopProducts(shop);
     }
@@ -176,7 +166,7 @@ export class ShopApp {
     });
   }
 
-  componentDidLoad() {   
+  componentWillLoad() {   
     let self = this;
 
     // run this straight up, since to fetch the json we don't need to wait on web3 just yet
@@ -262,6 +252,20 @@ export class ShopApp {
     this.account = account; 
   }
 
+  selectProduct(product) {
+    this.product = product; 
+  }
+
+  goBack(type) {
+    if (type == "product") {
+      this.product = null;
+    }
+    else {
+      this.shop = null;
+      this.product = null;
+    }
+  }
+
   createShop = (fields) => {
     this.isLoading = true;
 
@@ -282,6 +286,18 @@ export class ShopApp {
     ).then(() => this.loadShopProducts(this.shop));
 
   }
+
+  addToCart = () => {
+
+  }
+
+  editProduct = (fields) => {
+
+  }
+
+  deleteProduct = (fields) => {
+
+  }
   
   render() {
     let mainContent = [];
@@ -290,11 +306,24 @@ export class ShopApp {
       mainContent.push(<div class="loading-icon" />);
     }
     else {
-      if (this.shop) {
+      if (this.product) {
+        let shop = this.shops[this.shop];
+        let product = shop.products[this.product];
+
+        // todo: move this into a product component
+
+        // looks  like a bug here hmm; onclick wont update unless I use a different structure
+        mainContent.push(<div></div>);
+        mainContent.push(<div><div onClick={() => this.goBack("product")} class="product-back">Back</div><h2>{product.name}</h2></div>);
+
+        mainContent.push(<shop-product product={product} account={this.account} addCartCallback={this.addToCart} editCallback={this.editProduct} deleteCallback={this.deleteProduct} />);
+
+      }
+      else if (this.shop) {
 
         let shop = this.shops[this.shop];
 
-        mainContent.push(<div class="shop-title"><div class="shop-back" onClick={() => this.selectShop(null)}>Back</div><h2>{shop.name}</h2></div>);
+        mainContent.push(<div class="shop-title"><div class="shop-back" onClick={() => this.goBack("shop")}>Back</div><h2>{shop.name}</h2></div>);
 
         if ('products' in shop) {
           let products = shop.products;
@@ -305,7 +334,7 @@ export class ShopApp {
             let imageStyle = { 'backgroundImage': 'url('+product.image.trim()+')' };
 
             mainContent.push(
-              <div class="product-tile">
+              <div class="product-tile" onClick={() => this.selectProduct(item)}>
                 <div class="product-image" style={imageStyle} />
                 <div class="product-title">{product.name}</div>
                 <div class="product-price">{product.price.toString(10)} wei</div>
