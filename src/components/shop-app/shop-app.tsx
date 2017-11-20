@@ -118,7 +118,7 @@ export class ShopApp {
   }
 
   selectShop(shop) {
-    if (!('products' in this.shops[shop])) {
+    if (shop && !('products' in this.shops[shop])) {
       this.loadShopProducts(shop);
     }
     else {
@@ -294,6 +294,8 @@ export class ShopApp {
 
         let shop = this.shops[this.shop];
 
+        mainContent.push(<div class="shop-title"><div class="shop-back" onClick={() => this.selectShop(null)}>Back</div><h2>{shop.name}</h2></div>);
+
         if ('products' in shop) {
           let products = shop.products;
 
@@ -306,15 +308,7 @@ export class ShopApp {
               <div class="product-tile">
                 <div class="product-image" style={imageStyle} />
                 <div class="product-title">{product.name}</div>
-                <div class="product-sku">SKU: {product.name}</div>
-                <div class="product-category">Category: {product.category}</div>
-                <div class="product-price">Price: {product.price.toString(10)} wei</div>
-                <div class="product-stock">Stock: {product.stock.toString(10)}</div>
-                <button class="add-cart">Add to Cart</button>
-                {shop.merchant === this.account
-                ? <div class="product-merchant"><button>Edit</button><button>Delete</button></div>
-                : <div />
-                }
+                <div class="product-price">{product.price.toString(10)} wei</div>
               </div>
             );
           });
@@ -329,7 +323,9 @@ export class ShopApp {
           image: "Image"
         };
 
-        mainContent.push(<div><create-tile-form title="Create Product" fields={fields} callback={this.createProduct} /></div>);
+        if (shop.merchant === this.account) {
+          mainContent.push(<div><create-tile-form title="Create Product" fields={fields} callback={this.createProduct} /></div>);
+        }
 
       }
       else {

@@ -18,7 +18,7 @@
     "start": "npm run dev",
     "test.watch": "jest --watch --no-cache",
     "build:contracts": "truffle compile && npm run contracts:sync-src",
-    "migrate:contracts": "truffle migrate --reset && npm contracts:sync-src",
+    "migrate:contracts": "truffle migrate --reset && npm run contracts:sync-src",
     "contracts:sync-src": "rimraf src/assets/contracts && rimraf www/assets/contracts && cp -R build/contracts/ src/contracts && cp -R build/contracts/ www/assets/contracts"
   },
   "author": "Joshua Richardson (Arctek)",

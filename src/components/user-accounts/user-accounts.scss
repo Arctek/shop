@@ -10,6 +10,10 @@ user-accounts {
   padding:6px 11px;
   border:1px solid #fff;
   border-radius:4px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   .selected & {
     color:#DE7150;
@@ -33,6 +37,7 @@ user-accounts {
         right: 0;
         margin-top: 10px;
         line-height: 2;
+        z-index: 1
     }
 }
 
