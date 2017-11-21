@@ -1,4 +1,4 @@
-import { Component, State, Listen } from '@stencil/core';
+import { Component, State, Listen, Prop } from '@stencil/core';
 import { default as Bluebird } from 'bluebird';
 
 let Shop, ShopFactory, Product, Order;
@@ -26,10 +26,13 @@ export class ShopApp {
   @State() account: string;
   @State() shops: any;
   @State() shop: any;
+  @State() cart: any;
   @State() product: any;
   @State() shopFactory: any;
 
   @State() isLoading = false;
+  @State() loadFailed = false;
+  @State() isInShop = false;
 
   shopFactoryContract: any;
   shopContract: any;
@@ -46,7 +49,6 @@ export class ShopApp {
   }
 
   instantiateContracts() {
-
     this.shopFactoryContract = TruffleContract(ShopFactory);
     this.shopFactoryContract.setProvider(this.web3.currentProvider);
     this.shopContract = TruffleContract(Shop);
@@ -85,7 +87,7 @@ export class ShopApp {
       shopContract.getProductCount,
       shopContract.productIndex,
       this.productContract,
-      { 
+      {
         name: this.web3.toAscii,
         sku: this.web3.toAscii,
         category: this.web3.toAscii,
@@ -103,20 +105,6 @@ export class ShopApp {
     });
   }
 
-  selectShop(shop) {
-    if (shop === null) {
-      this.product = null;
-    }
-
-    if (shop && !('products' in this.shops[shop])) {
-      this.loadShopProducts(shop);
-    }
-    else {
-      this.shop = shop;
-    }
-  }
-
-
   // iterate over children contracts that belong to a parent contract; i.e. shops belong to shopfactory, products belong to shops
   contractChildCollectionIterator(parentCountFunction, parentIndexFunction, childContract, childProperties, cachedCollection) {
     return parentCountFunction().then((childCount) => {
@@ -125,32 +113,17 @@ export class ShopApp {
       let noExisting = !cachedCollection;
 
       for (let i = 0; i < childCount; i++) {
-
         promiseChain.push(
-          parentIndexFunction(i).then( (childAddress) => {
+          parentIndexFunction(i).then((childAddress) => {
             if (noExisting || !(childAddress in cachedCollection)) {
               return childContract.at(childAddress)
-              .then(contract => {
-                let child = { ...childProperties, contract: contract };
-                console.log(contract);
-                let propPromiseChain = [];
-                Object.keys(childProperties).map((item, i) => {
-                  propPromiseChain.push(
-                    contract[item].call().then(prop => {
-                      if (typeof child[item] === "function") {
-                        child[item] = child[item](prop);
-                      }
-                      else {
-                        child[item] = prop;
-                      }
-                    })
-                  )
-                  }
-                );
-                return Promise.all(propPromiseChain).then(() => {
-                  children[childAddress] = child;
-                });
-              });
+              .then(contract => 
+                this.contractGetProperties(contract, childProperties)
+                .then(child => {
+                  child.contract = contract;
+                  children[childAddress] = child
+                })
+              );
             }
             else {
               children[childAddress] = cachedCollection[childAddress];
@@ -158,12 +131,21 @@ export class ShopApp {
           })
         );
       }
-
-      return Promise.all(promiseChain).then(() => {
-        return children;
-      });
-
+      return Promise.all(promiseChain).then(() => children);
     });
+  }
+
+  contractGetProperties(contract, properties) {
+    let propPromiseChain = [];
+    let props: any = {};
+    Object.keys(properties).map((item, i) =>
+      propPromiseChain.push(
+        contract[item].call().then(prop => 
+          props[item] = (typeof properties[item] === "function") ? properties[item](prop) : prop
+        )
+      )
+    );
+    return Promise.all(propPromiseChain).then(() => props);
   }
 
   componentWillLoad() {   
@@ -225,21 +207,25 @@ export class ShopApp {
       self.web3 = web3;
 
       this.web3.eth.getAccountsPromise((err, accounts) => {
-        self.accounts = accounts;
-        self.account = accounts[0];
+        if (!err) {
+          self.accounts = accounts;
+          self.account = accounts[0];
+        }
+        else {
+          console.log("No accounts");
 
-        this.isLoading = false;
-      })
-      .catch(err => {
-        console.log("No accounts");
+          this.loadFailed = true;
+        }
 
         this.isLoading = false;
       });
 
 
       // Instantiate contract once web3 provided; and abi's fetched
-      fetchContractsPromise.then(() => this.instantiateContracts());
+      //fetchContractsPromise.then(() => this.instantiateContracts());
     })
+    .then(() => fetchContractsPromise)
+    .then(() => this.instantiateContracts())
     .catch((err) => {
       console.log('Error finding web3:');
       console.log(err);
@@ -292,57 +278,66 @@ export class ShopApp {
   }
 
   editProduct = (fields) => {
+    this.isLoading = true;
 
+    let productContract = this.shops[this.shop].products[this.product].contract;
+
+    productContract.update(
+      fields.name,
+      fields.sku,
+      fields.category,
+      fields.price,
+      fields.stock,
+      fields.image,
+      { from: this.account }
+    ).then(() =>
+      this.contractGetProperties(
+        productContract,
+        {
+          name: this.web3.toAscii,
+          sku: this.web3.toAscii,
+          category: this.web3.toAscii,
+          price: 0,
+          stock: 0,
+          image: this.web3.toAscii,
+          merchant: ''
+        }
+      ).then(props => {
+        props.contract = productContract;
+        this.shops[this.shop].products[this.product] = props;
+        this.isLoading = false;
+      })
+    );
+
+     
   }
 
   deleteProduct = (fields) => {
 
   }
-  
-  render() {
-    let mainContent = [];
 
-    if (this.isLoading) {
-      mainContent.push(<div class="loading-icon" />);
+  removeCartProduct = (product) => {
+
+  }
+
+  resetShop = () => {
+    this.shop = null;
+  }
+
+  loadShop = (shop) => {
+    if (shop === null) {
+      this.product = null;
     }
-    else {
-      if (this.product) {
-        let shop = this.shops[this.shop];
-        let product = shop.products[this.product];
 
-        // todo: move this into a product component
-
-        // looks  like a bug here hmm; onclick wont update unless I use a different structure
-        mainContent.push(<div></div>);
-        mainContent.push(<div><div onClick={() => this.goBack("product")} class="product-back">Back</div><h2>{product.name}</h2></div>);
-
-        mainContent.push(<shop-product product={product} account={this.account} addCartCallback={this.addToCart} editCallback={this.editProduct} deleteCallback={this.deleteProduct} />);
-
+    if (this.shops) {
+      if (shop && !('products' in this.shops[shop])) {
+        this.loadShopProducts(shop);
       }
-      else if (this.shop) {
+      else {
+        this.shop = shop;
+      }
 
-        let shop = this.shops[this.shop];
-
-        mainContent.push(<div class="shop-title"><div class="shop-back" onClick={() => this.goBack("shop")}>Back</div><h2>{shop.name}</h2></div>);
-
-        if ('products' in shop) {
-          let products = shop.products;
-
-          Object.keys(products).map((item, i) => {
-            let product = products[item];
-
-            let imageStyle = { 'backgroundImage': 'url('+product.image.trim()+')' };
-
-            mainContent.push(
-              <div class="product-tile" onClick={() => this.selectProduct(item)}>
-                <div class="product-image" style={imageStyle} />
-                <div class="product-title">{product.name}</div>
-                <div class="product-price">{product.price.toString(10)} wei</div>
-              </div>
-            );
-          });
-        }
-
+      if (this.shop !== null) {
         let fields = { 
           name: "Product Name",
           sku: "SKU",
@@ -350,39 +345,93 @@ export class ShopApp {
           price: "Price",
           stock: "Stock",
           image: "Image"
-        };
+        }; 
 
-        if (shop.merchant === this.account) {
-          mainContent.push(<div><create-tile-form title="Create Product" fields={fields} callback={this.createProduct} /></div>);
-        }
-
+        return (
+          <shop-component 
+            account={this.account} 
+            address={this.shop} 
+            data={this.shops[shop]} 
+            createProductFields={fields} 
+            createProductCallback={this.createProduct} />
+        );
       }
-      else {
-        if (this.shops) {
-          Object.keys(this.shops).map((item, i) => {
-            let shop = this.shops[item];
+    }
+  }
 
-            mainContent.push(<div class="shop-tile" onClick={() => this.selectShop(item)}><div class="title">{shop.name}</div></div>);
-          });
-        }
+  loadProduct = (shop, product) => {
+    this.product = product;
 
-        let fields = { name: "Shop Name" };
-
-        mainContent.push(<create-tile-form title="Create Shop" fields={fields} callback={this.createShop} />);
+    if (this.shop !== null) {
+      if (this.shops && 'products' in this.shops[shop]) {
+        return (
+          <shop-product 
+            account={this.account} 
+            shop={this.shop}
+            address={this.product} 
+            data={this.shops[shop].products[product]}
+            addCartCallback={this.addToCart} 
+            editCallback={this.editProduct}
+            deleteCallback={this.deleteProduct} />
+        );
       }
+      else if (this.shops) {
+        // come here via browser history
+        this.loadShopProducts(shop);
+      }
+    }
+  }
+  
+  render() {
+    if (this.loadFailed) {
+      return (
+        <div>Failed to load web3</div>
+      );
     }
 
     return ( 
       <div>
         <header class="clearfix">
           <div class="width-container">
-            <h1>Shop Front DAPP</h1>
+            <stencil-route-link url="/"><h1>Shop Front DAPP</h1></stencil-route-link>
             <user-accounts accounts={this.accounts} account={this.account} callback={this.selectAccount} />
+            {this.shop != null
+              ? <stencil-route-link url="/cart"><div class="cart-link">Cart</div></stencil-route-link>
+              : <div />
+            }
           </div>
         </header>
         <main>
           <div class="width-container">
-            {mainContent}
+            {this.isLoading === true
+            ? <div class="loading-icon" />
+            : <stencil-router>
+                <stencil-route
+                  url="/"
+                  component="shop-list"
+                  componentProps={{
+                    "shops" : this.shops ? this.shops : {},
+                    "createFields" : { 
+                      name: "Shop Name"
+                    },
+                    "createCallback" : this.createShop,
+                    "backCallback" : this.resetShop
+                  }}
+                  exact={true} />
+                <stencil-route
+                  url="/shop/:shop"
+                  routeRender={(props: { [key: string]: any }) => this.loadShop(props.match.params.shop)}
+                  exact={true} />
+                <stencil-route
+                  url="/shop/:shop/:product"
+                  component="shop-product"
+                  routeRender={(props: { [key: string]: any }) => 
+                    this.loadProduct(
+                      props.match.params.shop,
+                      props.match.params.product
+                  )} />
+              </stencil-router>
+            }
           </div>
         </main>
       </div>

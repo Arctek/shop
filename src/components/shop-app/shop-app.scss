@@ -20,14 +20,33 @@ h1 {
     margin: 0;
     padding: 0;
     display: inline-block;
+    color: #fff;
 }
 
 h2 {
     margin: 0;
     padding:0;
-    padding-bottom:1rem;
-    margin-bottom: 2rem;
-    border-bottom:1px solid #ccc;
+    display: inline-block;
+    padding-right: 2rem
+}
+
+a {
+  text-decoration: none
+}
+
+.title-bar {
+  padding-bottom:1rem;
+  margin-bottom: 2rem;
+  border-bottom:1px solid #ccc;
+
+  .address {
+    display: inline-block;
+    font-size: 0.9rem;
+    color:#aaa;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
 }
 
 .width-container {
@@ -79,6 +98,21 @@ button {
 
 }
 
+.cart-link {
+  cursor: pointer;
+  padding:6px 11px;
+  border:1px solid #fff;
+  border-radius:4px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  float: right;
+  margin-right: 2rem;
+  color: #fff
+}
+
+
 .shop-tile {
   font-family: Arial, Helvetica, sans serif, serif;
   display: inline-block;
@@ -89,6 +123,19 @@ button {
   margin-right: 2.5rem;
   margin-bottom: 2.5rem;
   vertical-align: top;
+  position: relative;
+  color: #000;
+
+  .shop-address {
+    position: absolute;
+    bottom:1rem;
+    left:1rem;
+    right:1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #aaa;
+    font-size: 0.9rem
+  }
 }
 
 .title {
@@ -99,6 +146,11 @@ button {
   &:hover {
     background:#85cadb;
     cursor: pointer;
+  }
+
+  .shop-tile & {
+    padding-top:2rem;
+    padding-bottom:4rem;
   }
 }
 
@@ -115,7 +167,9 @@ button {
   position: relative;
   padding-top:1.5rem;
   min-width: 25%;
+  max-width: 100%;
   transition:background-color 180ms;
+  color: #000;
 
   & button { 
     display: block;
@@ -151,8 +205,16 @@ button {
 .product-sku,
 .product-category,
 .product-price,
-.product-stock {
+.product-stock,
+.product-address {
     padding:1rem 1.5rem
+}
+
+.product-address {
+  color: #aaa;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis
 }
 
 .product-merchant {
@@ -164,7 +226,11 @@ button {
 .shop-back, .product-back {
     float: right;
 
-    &:hover {
+    a {
+      color: #000;
+    }
+
+    &:hover a {
         cursor: pointer;
         color:#DE7150
     }

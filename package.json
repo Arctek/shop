@@ -24,8 +24,8 @@
   "author": "Joshua Richardson (Arctek)",
   "license": "MIT",
   "dependencies": {
-    "@stencil/core": "^0.0.7",
-    "@stencil/router": "^0.0.17",
+    "@stencil/core": "0.0.7",
+    "@stencil/router": "0.0.17",
     "@types/bluebird": "^3.5.18",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
