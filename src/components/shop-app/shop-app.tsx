@@ -20,13 +20,12 @@ interface GetWeb3Result {
   styleUrl: 'shop-app.scss'
 })
 export class ShopApp {
-
   @State() web3: any;
   @State() accounts: any;
   @State() account: string;
   @State() shops: any;
   @State() shop: any;
-  @State() cart: any;
+  @State() cart: any = {};
   @State() product: any;
   @State() shopFactory: any;
 
@@ -252,13 +251,25 @@ export class ShopApp {
     }
   }
 
-  createShop = (fields) => {
+  @Listen('createTileFormSubmit')
+  handleCreateTileFormSubmit(event: CustomEvent) {
+    switch (event.detail.type) {
+      case "shop":
+        this.createShop(event.detail.fields);
+      break;
+      case "product":
+        this.createProduct(event.detail.fields);
+      break;
+    }
+  }
+
+  createShop(fields) {
     this.isLoading = true;
 
     this.shopFactory.deployShop(fields.name, { from: this.account, gas: 33000000 }).then(() => this.getShops());
   }
 
-  createProduct = (fields) => {
+  createProduct(fields) {
     let shopContract = this.shops[this.shop].contract;
 
     shopContract.addProduct(
@@ -273,12 +284,33 @@ export class ShopApp {
 
   }
 
-  addToCart = () => {
+  @Listen('addCartAction')
+  addToCart(event: CustomEvent) {
+    let {shop, product} = event.detail;
 
+    let cart = this.cart;
+
+    if (!(shop in cart)) {
+      cart[shop] = {};
+      cart[shop][product] = 1;
+    }
+    else {
+      if (!(product in cart[shop])) {
+        cart[shop][product]++;
+      }
+      else {
+        cart[shop][product] = 1;
+      }
+    }
+
+    this.cart = cart;
   }
 
-  editProduct = (fields) => {
+  @Listen('editProductAction')
+  editProduct(event: CustomEvent) {
     this.isLoading = true;
+
+    let fields = event.detail.fields;
 
     let productContract = this.shops[this.shop].products[this.product].contract;
 
@@ -312,11 +344,30 @@ export class ShopApp {
      
   }
 
-  deleteProduct = (fields) => {
+  @Listen('deleteProductAction')
+  deleteProduct(event: CustomEvent) {
+    let {shop, product} = event.detail;
+    this.isLoading = true;
 
+    let shopContract = this.shops[this.shop].contract;
+
+    shopContract.removeProduct(product, { from: this.account })
+    .then(() => {
+      let products = this.shops[this.shop].products;
+
+      delete products[product];
+
+      this.shops[this.shop].products = products;
+
+      this.product = null;
+      this.isLoading = false;
+
+      //      this.history.push('/shop/' +, {});
+      window.location.href = '/shop/' + this.shop;
+    });
   }
 
-  removeCartProduct = (product) => {
+  removeCartProduct(product) {
 
   }
 
@@ -352,8 +403,7 @@ export class ShopApp {
             account={this.account} 
             address={this.shop} 
             data={this.shops[shop]} 
-            createProductFields={fields} 
-            createProductCallback={this.createProduct} />
+            createProductFields={fields} />
         );
       }
     }
@@ -369,10 +419,7 @@ export class ShopApp {
             account={this.account} 
             shop={this.shop}
             address={this.product} 
-            data={this.shops[shop].products[product]}
-            addCartCallback={this.addToCart} 
-            editCallback={this.editProduct}
-            deleteCallback={this.deleteProduct} />
+            data={this.shops[shop].products[product]} />
         );
       }
       else if (this.shops) {
@@ -389,6 +436,12 @@ export class ShopApp {
       );
     }
 
+    let cartCount: any = '';
+
+    if (this.shop && this.shop in this.cart) {
+      cartCount = Object.keys(this.cart[this.shop]).length;
+    }
+
     return ( 
       <div>
         <header class="clearfix">
@@ -396,7 +449,7 @@ export class ShopApp {
             <stencil-route-link url="/"><h1>Shop Front DAPP</h1></stencil-route-link>
             <user-accounts accounts={this.accounts} account={this.account} callback={this.selectAccount} />
             {this.shop != null
-              ? <stencil-route-link url="/cart"><div class="cart-link">Cart</div></stencil-route-link>
+              ? <stencil-route-link url="/cart"><div class="cart-link">Cart {cartCount}</div></stencil-route-link>
               : <div />
             }
           </div>
@@ -414,8 +467,16 @@ export class ShopApp {
                     "createFields" : { 
                       name: "Shop Name"
                     },
-                    "createCallback" : this.createShop,
                     "backCallback" : this.resetShop
+                  }}
+                  exact={true} />
+                <stencil-route
+                  url="/cart"
+                  component="shopping-cart"
+                  componentProps={{
+                    "shop" : this.shop,
+                    "cart" : this.cart,
+                    "data" : (this.shop && this.shop in this.shops) ? this.shops[this.shop] : {}
                   }}
                   exact={true} />
                 <stencil-route

@@ -8,10 +8,12 @@ export class CreateTileForm {
 
   @Prop() title = "";
   @Prop() fields = {};
-  @Prop() callback: Function;
+  @Prop() type = "";
 
   @State() formVisible = false;
   @State() fieldValues = {};
+
+  @Event() createTileFormSubmit: EventEmitter;
 
   componentWillLoad() {
   }
@@ -27,7 +29,7 @@ export class CreateTileForm {
   handleFormSubmit(e) {
     e.preventDefault();
 
-    this.callback(this.fieldValues);
+    this.createTileFormSubmit.emit({ fields: this.fieldValues, type: this.type });
   }
 
   render() {

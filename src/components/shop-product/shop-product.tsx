@@ -21,9 +21,9 @@ export class ShopProduct {
 
   @State() fieldValues = {};
 
-  @Prop() addCartCallback: Function;
-  @Prop() editCallback: Function;
-  @Prop() deleteCallback: Function;
+  @Event() addCartAction: EventEmitter;
+  @Event() deleteProductAction: EventEmitter;
+  @Event() editProductAction: EventEmitter;
 
   @State() formVisible = false;
 
@@ -42,11 +42,19 @@ export class ShopProduct {
   handleFormSubmit(e) {
     e.preventDefault();
 
-    this.editCallback(this.fieldValues);
+    //this.editCallback(this.fieldValues);
+    this.editProductAction.emit({ fields: this.fieldValues });
 
     this.toggleForm();
   }
 
+  addToCart() {
+    this.addCartAction.emit({ shop: this.shop, product: this.address });
+  }
+
+  delete() {
+    this.deleteProductAction.emit({ shop: this.shop, product: this.address });
+  }
 
   render() {
     let product = this.data;
@@ -96,11 +104,11 @@ export class ShopProduct {
           <div class="prod-category">{product.category}</div>
           <div class="prod-price">{product.price.toString(10)} wei</div>
           <div class="prod-stock">{product.stock.toString(10)}</div>
-          <button onClick={() => this.addCartCallback(this.shop, this.address)}>Add to Cart</button>
+          <button onClick={() => this.addToCart()}>Add to Cart</button>
           {this.account === product.merchant
           ? <div class="merchant-opts">
               <button onClick={() => this.toggleForm()}>Edit</button>
-              <button onClick={() => this.deleteCallback(this.shop, this.address)}>Delete</button>
+              <button onClick={() => this.delete()}>Delete</button>
             </div>
           : <div />
           }
